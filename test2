@@ -1,0 +1,165 @@
+import requests
+import json
+import os
+import gspread
+from google.oauth2.service_account import Credentials
+
+# Базовые настройки доступа
+API_BASE_HOST = "https://testdev2.logistpro.su"
+API_BASE_URL = f"{API_BASE_HOST}/api/v1/"
+API_KEY = "cCwnQ8BxKCMlPsN7thVhdtou2PiJzZE46atEQwlehaQ="
+LOGIN = "ext.customer.7@logistpro.su"
+PASSWORD = "SY61kIX4v6Kk3K"
+
+# Подготовка базовых заголовков для HTTP запросов
+headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-ApiKey": API_KEY,
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36"
+}
+
+# Создание сессии для управления куками и заголовками
+session = requests.Session()
+session.headers.update(headers)
+
+# Параметры Google Sheets
+creds_path = 'C:\\Users\\Даниил\\Desktop\\Logist Pro\\py\\credentials.json'
+spreadsheet_name = 'Logist Pro'
+scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+
+# Авторизация в Google Sheets
+creds = Credentials.from_service_account_file(creds_path, scopes=scopes)
+client = gspread.authorize(creds)
+spreadsheet = client.open(spreadsheet_name)
+worksheet = spreadsheet.sheet1  # Открываем первый лист
+
+def main():
+    # 1. Проверка доступа к API
+    url = f"{API_BASE_URL}test/ping"
+    print(f"1. Проверка доступа к API: {url}")
+    response = session.get(url)
+    if not response.ok:
+        print("   >> API не доступен")
+        return
+    print("   >> есть доступ")
+
+    # 2. Авторизация
+    url = f"{API_BASE_URL}account/login"
+    print(f"2. Авторизация: {url}")
+    login_data = {"Login": LOGIN, "Password": PASSWORD}
+    response = session.post(url, json=login_data)
+    if not response.ok:
+        print("   >> Авторизация не удалась")
+        return
+    print("   >> прошла успешно")
+
+    # Сохраняем cookie в сессии
+    cookie = response.cookies.get(".AspNet.ApplicationCookie")
+    if not cookie:
+        print("   >> [Error] cookie не установлена")
+        return
+    session.headers.update({"Cookie": f".AspNet.ApplicationCookie={cookie}"})
+    print(f"   >> Cookie установлена: {cookie}")
+
+    # 3. Получение справочников для создания запроса
+    url = f"{API_BASE_URL}request"
+    print(f"3. Получение справочников для создания запроса: {url}")
+    response = session.get(url)
+    if not response.ok:
+        print(f"[Error] {response.status_code} {response.reason}")
+        return
+
+    requests_data = response.json()
+    save_to_file("response.json", requests_data)
+    
+    ids = [item["Id"] for item in requests_data.get("Items", [])]
+    for id in ids:
+        fetch_request(id)
+        
+    # Запускаем функцию для записи данных в Google Sheets
+    update_google_sheet()
+
+def fetch_request(id):
+    url = f"{API_BASE_URL}request/{id}"
+    response = session.get(url)
+    if not response.ok:
+        return
+    request_data = response.json()
+    save_request_to_file(id, request_data)
+
+def save_request_to_file(id, request_data):
+    dir_path = os.path.join(os.getcwd(), 'requests')
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    file_path = os.path.join(dir_path, f"{id}.json")
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(request_data, f, ensure_ascii=False, indent=2)
+    print(f"Request saved to {file_path}")
+
+def save_to_file(filename, data):
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"Response saved to {filename}")
+
+def update_google_sheet():
+    # Определение заголовков столбцов
+    headers = ['Дата', 'Тип груза', 'Загрузка', 'Выгрузка', 'Кузов', 'Ставка', 'Фирма', 'Город', 'ФИО', 'Телефон']
+    worksheet.append_row(headers)
+
+    # Путь к директории с JSON-файлами
+    json_dir = os.path.join(os.getcwd(), 'requests')
+
+    # Обработка каждого JSON-файла
+    for filename in os.listdir(json_dir):
+        if filename.endswith('.json'):
+            file_path = os.path.join(json_dir, filename)
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                start_date = data.get('StartDate', '')
+                cargo = data.get('Cargo', '')
+                addresses_loading = [route['Address'] for route in data.get('Route', []) if route.get('TypeTitle') == 'Погрузка']
+                addresses_unloading = [route['Address'] for route in data.get('Route', []) if route.get('TypeTitle') == 'Выгрузка']
+                transport_summary = data.get('TransportSummary', '')
+
+                # Обработка 'Proposal'
+                proposal = data.get('Proposal', {})
+                bet_dec = proposal.get('BetDec', '') if proposal else ''
+
+                company_name = data.get('Customer', {}).get('Company', {}).get('Name', '')
+                city = extract_city(data.get('Customer', {}).get('Company', {}).get('AddressLegal', ''))
+                contact_person = data.get('Customer', {}).get('ContactPerson', {})
+                contact_name = contact_person.get('Name', '')
+                contact_phone = contact_person.get('Phone', '')
+                
+                row = [
+                    start_date,
+                    cargo,
+                    ', '.join(addresses_loading),
+                    ', '.join(addresses_unloading),
+                    extract_body_type(transport_summary),
+                    bet_dec,
+                    company_name,
+                    city,
+                    contact_name,
+                    contact_phone
+                ]
+                
+                worksheet.append_row(row)
+
+def extract_body_type(transport_summary):
+    for line in transport_summary.split('\n'):
+        if "Тип кузова:" in line:
+            return line.split("Тип кузова:")[1].strip()
+    return ""
+
+def extract_city(address):
+    parts = address.split(',')
+    if len(parts) >= 2:
+        return parts[-2].strip()
+    return parts[-1].strip()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,7 @@
+requests
+credentials.json
+.env
+__pycache__/
+*.pyc
+venv
+processed_ids.json
