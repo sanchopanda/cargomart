@@ -5,7 +5,7 @@ import re
 from google.oauth2.service_account import Credentials
 
 # Путь к файлу с ключами и имя таблицы
-creds_path = 'C:\\Users\\Даниил\\Desktop\\Logist Pro\\py\\credentials.json'
+creds_path = '\\Users\\altdan\\Documents\\Project\\ATI\\cargomart\\credentials.json'
 spreadsheet_name = 'Logist Pro'
 
 # Укажите scopes
@@ -24,7 +24,7 @@ headers = ['Дата', 'Тип груза', 'Загрузка', 'Выгрузк�
 worksheet.append_row(headers)
 
 # Путь к директории с JSON-файлами
-json_dir = 'C:\\Users\\Даниил\\Desktop\\Logist Pro\\py\\requests'
+json_dir = 'requests'
 
 def extract_value(text, key):
     """
