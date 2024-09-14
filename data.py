@@ -1,23 +1,37 @@
 from dadata import Dadata
 
 # Dadata токены
-token = "8b98a136687412491cf220d96838f48ffc495178"
-secret = "02a6d8e26bdaf701c89035cdc49024f7d6c324f5"
+token = "2a7a0ad0255948c57cd026af350973c0b5137790"
+secret = "534860360325aa528f93be32969ae0e9572aafea"
 dadata = Dadata(token, secret)
 
 # Пример неформатированного адреса
-raw_address = 'A САНКТ-ПЕТЕРБУРГ •Погрузка 13 сен 13:00 г Санкт-Петербург, ул Кубинская, д 75 к 2 Россия Обязательное наличие 4 стоек на погрузке!!!! -------------------погрузка с 10:00 до 16:00 -------Агроимпэкс, Кубинская 75, Территория ИНТЕРТЕРМИНАЛ, Склад № 2. Для въезда на территорию водителю необходимо подъехать к шлагбауму и подойти у будке охраны, которая находится между двумя шлагбаумами. Назвать компания "Агроимпэкс" и получить магнитный пропуск и бланк, который необходимо будет отметить на складе, для последующего выезда. Заехать и припарковаться у доков 5,6,7,8,9.10. Подойти в диспетчерскую службу, на двери табличка "Агроимпэкс" Развернуть Грузоотправитель'
+raw_address = 'Тульская обл, Ленинский р-н, деревня Варваровка, Варваровский проезд, стр 15Ф'
 
 # Функция для форматирования адреса через DaData
 def format_address(address):
     try:
-        response = dadata.clean("address", address)
-        formatted_address = response.get('result', 'Адрес не распознан')
-        print(f"Форматированный адрес: {formatted_address}")
-        return formatted_address
+        # Предполагается, что результат вызова dadata.suggest возвращает список
+        address_data = dadata.suggest("address", address)
+        
+        if address_data:  # Проверяем, что список не пуст
+            # Берем первый элемент списка, который содержит данные
+            address_info = address_data[0]['data']
+            
+            # Извлекаем данные о стране, регионе, типе и названии населенного пункта
+            country = address_info.get('country')
+            region = address_info.get('region_with_type')
+            settlement_type = address_info.get('settlement_type_full')
+            settlement = address_info.get('settlement')
+            
+            # Форматируем и выводим адрес
+            print(f"Форматированный адрес: {country}, {region}, {settlement_type}, {settlement}")
+        else:
+            print("Адрес не найден.")
+    
     except Exception as e:
         print(f"Ошибка при форматировании адреса: {e}")
-        return "Ошибка форматирования"
+
 
 # Тест функции форматирования адреса
 formatted_address = format_address(raw_address)

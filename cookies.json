@@ -1,13 +1,23 @@
 [
     {
         "domain": "cargomart.ru",
-        "expiry": 1728839606,
+        "expiry": 1728893479,
         "httpOnly": false,
         "name": "token",
         "path": "/",
         "sameSite": "Lax",
         "secure": false,
-        "value": "yJvxQSX0B22tByA0XRwcVNjRIlu4XwyXFWSr7Z1ocPcSAJfrijVtQUgps46qpJE2"
+        "value": "29a9B0Ev7CdALjTxVdM3BrTDiL9sZhFRJv9AA88KXDYfyNdB-NGx2dCFWN3v4cw-"
+    },
+    {
+        "domain": ".cargomart.ru",
+        "expiry": 1757783192,
+        "httpOnly": false,
+        "name": "_ym_d",
+        "path": "/",
+        "sameSite": "None",
+        "secure": true,
+        "value": "1726247193"
     },
     {
         "domain": ".cargomart.ru",
@@ -39,16 +49,6 @@
     },
     {
         "domain": ".cargomart.ru",
-        "expiry": 1726333595,
-        "httpOnly": false,
-        "name": "usedesk_messenger_token",
-        "path": "/",
-        "sameSite": "Lax",
-        "secure": true,
-        "value": "BamDKCwfPBQoD0DiCHD_CFCaCKBqxBiBWC5C6CVDQD0B7DYCYD-PDqBvBgQbBQyP"
-    },
-    {
-        "domain": ".cargomart.ru",
         "expiry": 1757783192,
         "httpOnly": false,
         "name": "_ym_uid",
@@ -59,7 +59,7 @@
     },
     {
         "domain": "cargomart.ru",
-        "expiry": 1726334005,
+        "expiry": 1726387878,
         "httpOnly": false,
         "name": "usedesk_messenger_token",
         "path": "/",
@@ -79,7 +79,7 @@
     },
     {
         "domain": ".cargomart.ru",
-        "expiry": 1726249403,
+        "expiry": 1726303277,
         "httpOnly": false,
         "name": "_ym_visorc",
         "path": "/",
@@ -89,17 +89,17 @@
     },
     {
         "domain": ".cargomart.ru",
-        "expiry": 1757783192,
+        "expiry": 1726387426,
         "httpOnly": false,
-        "name": "_ym_d",
+        "name": "usedesk_messenger_token",
         "path": "/",
-        "sameSite": "None",
+        "sameSite": "Lax",
         "secure": true,
-        "value": "1726247193"
+        "value": "BamDKCwfPBQoD0DiCHD_CFCaCKBqxBiBWC5C6CVDQD0B7DYCYD-PDqBvBgQbBQyP"
     },
     {
         "domain": "cargomart.ru",
-        "expiry": 1726334005,
+        "expiry": 1726387878,
         "httpOnly": false,
         "name": "usedesk-widget__login-user-data",
         "path": "/",

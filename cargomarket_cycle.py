@@ -12,6 +12,8 @@ import gspread
 from dadata import Dadata
 import re
 from google.oauth2.service_account import Credentials
+import platform
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -21,7 +23,14 @@ secret = "02a6d8e26bdaf701c89035cdc49024f7d6c324f5"
 dadata = Dadata(token, secret)
 
 # Путь к вашему chromedriver
-chrome_driver_path = os.path.join(script_dir, '/Users/altdan/Documents/Project/ATI/cargomart/chromedriver-mac-arm64/chromedriver')
+if platform.system() == 'Windows':
+    chrome_driver_path = os.path.join(script_dir, 'chromedriver-win64', 'chromedriver.exe')
+elif platform.system() == 'Darwin':  # macOS
+    chrome_driver_path = os.path.join(script_dir, 'chromedriver-mac-arm64', 'chromedriver')
+else:
+    raise Exception("Неизвестная операционная система. Не могу найти подходящий драйвер для Chrome.")
+
+print(f"Используемый драйвер: {chrome_driver_path}")
 
 # Данные для авторизации
 username = "a.ivanov@dsg-logist.ru"
@@ -118,7 +127,7 @@ except Exception as e:
     exit()
 
 # Определение заголовков столбцов
-headers = ['ID', 'Тип груза', 'Тип кузова', 'Дата', 'Вес', 'Загрузка', 'Выгрузка', 'Ставка', 'Фирма', 'Город', 'Телефон']
+headers = ['ID', 'Тип груза', 'Тип кузова', 'Дата', 'Вес', 'Загрузка', 'Страна загрузки', 'Населенный пункт загрузки', 'Выгрузка', 'Страна выгрузки', 'Населенный пункт выгрузки', 'Ставка', 'Фирма', 'Город', 'Телефон']
 try:
     worksheet.append_row(headers)
 except Exception as e:
@@ -145,7 +154,11 @@ def export_to_google_sheets(order_data):
             order_data.get('date', 'NONE'),
             order_data.get('weight', 'NONE'),
             order_data.get('loading', 'NONE'),
+            order_data.get('loading_country', 'NONE'),
+            order_data.get('loading_settlement', 'NONE'),
             order_data.get('unloading', 'NONE'),
+            order_data.get('unloading_country', 'NONE'),
+            order_data.get('unloading_settlement', 'NONE'),
             order_data.get('bet', 'NONE'),
             order_data.get('company', 'NONE'),
             order_data.get('city', 'NONE'),
@@ -162,7 +175,7 @@ def export_to_google_sheets(order_data):
         print(f"Ошибка при добавлении данных в Google Sheets: {e}")
 
 # Путь к файлу для хранения обработанных заявок
-processed_orders_file = os.path.join(script_dir, '/Users/altdan/Documents/Project/ATI/cargomart/processed_orders.json')
+processed_orders_file = os.path.join(script_dir, 'processed_orders.json')
 
 # Функция для загрузки обработанных заявок из файла
 def load_processed_orders():
@@ -251,19 +264,38 @@ def parse_order_details():
         date = 'NONE'
 
     try:
-        loading_raw = driver.find_element(By.CSS_SELECTOR, "div.flex.mt-2").text or 'NONE'
-        print(f"Адрес загрузки до обработки: {loading_raw}")
-        response = dadata.clean("address", loading_raw)
-        loading = response.get('result', '')
-        print(f"Адрес загрузки после обработки: {loading}")
+        loading = driver.execute_script("""
+            var element = arguments[0];
+            return element.childNodes[0].nodeValue.trim();
+        """, driver.find_element(By.CSS_SELECTOR, "div.flex.mt-2 .flex.flex-col .flex.flex-col .flex.flex-col"))
+
+        # Если текст пустой, заменяем его на 'NONE'
+        loading = loading or 'NONE'
+        print(f"Адрес загрузки до обработки: {loading}")
+
+        # Используем DaData для поиска адреса
+        address_data = dadata.suggest("address", loading)
+        address_info = address_data[0]['data']
+
+        # Извлекаем данные о стране и населённом пункте
+        loading_country = address_info.get('country')
+        loading_settlement = address_info.get('settlement_with_type')
     except Exception as e:
         print(f"Ошибка при обработке адреса загрузки: {e}")
         loading = 'NONE'  
 
     try:
-        unloading_raw = driver.find_element(By.CSS_SELECTOR, "div.flex.mt-4").text or 'NONE'
-        response = dadata.clean("address", unloading_raw)
-        unloading = response.get('result', '')
+        unloading = driver.execute_script("""
+            var element = arguments[0];
+            return element.childNodes[0].nodeValue.trim();
+        """, driver.find_element(By.CSS_SELECTOR, "div.flex.mt-4 .flex.flex-col .flex.flex-col .flex.flex-col"))
+        unloading = unloading or 'NONE'
+        address_data = dadata.suggest("address", unloading)
+        address_info = address_data[0]['data']
+            
+        # Извлекаем данные о стране, типе и названии населенного пункта
+        unloading_country = address_info.get('country')
+        unloading_settlement = address_info.get('settlement_with_type')
     except Exception as e:
         print(f"Ошибка при обработке адреса выгрузки: {e}")
         unloading = 'NONE'
@@ -288,7 +320,11 @@ def parse_order_details():
         "date": date,
         "weight": weight,
         "loading": loading,
+        "loading_country": loading_country,
+        "loading_settlement": loading_settlement,
         "unloading": unloading,
+        "unloading_country": unloading_country,
+        "unloading_settlement": unloading_settlement,
         "bet": bet,
         "company": company,
         "city": city,
