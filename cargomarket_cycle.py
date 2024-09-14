@@ -128,10 +128,16 @@ except Exception as e:
 
 # Определение заголовков столбцов
 headers = ['ID', 'Тип груза', 'Тип кузова', 'Дата', 'Вес', 'Загрузка', 'Страна загрузки', 'Населенный пункт загрузки', 'Выгрузка', 'Страна выгрузки', 'Населенный пункт выгрузки', 'Ставка', 'Фирма', 'Город', 'Телефон']
+
+# Проверка, существуют ли уже заголовки в первой строке
 try:
-    worksheet.append_row(headers)
+    existing_headers = worksheet.row_values(1)  # Получаем первую строку (заголовки)
+    
+    # Если первая строка пустая, добавляем заголовки
+    if not existing_headers:
+        worksheet.append_row(headers)
 except Exception as e:
-    print(f"Ошибка при добавлении заголовков в Google Sheets: {e}")
+    print(f"Ошибка при проверке или добавлении заголовков в Google Sheets: {e}")
     driver.quit()
     exit()
 
@@ -279,7 +285,7 @@ def parse_order_details():
 
         # Извлекаем данные о стране и населённом пункте
         loading_country = address_info.get('country')
-        loading_settlement = address_info.get('settlement_with_type')
+        loading_settlement = address_info.get('city_with_type')
     except Exception as e:
         print(f"Ошибка при обработке адреса загрузки: {e}")
         loading = 'NONE'  
@@ -295,7 +301,7 @@ def parse_order_details():
             
         # Извлекаем данные о стране, типе и названии населенного пункта
         unloading_country = address_info.get('country')
-        unloading_settlement = address_info.get('settlement_with_type')
+        unloading_settlement = address_info.get('city_with_type')
     except Exception as e:
         print(f"Ошибка при обработке адреса выгрузки: {e}")
         unloading = 'NONE'
