@@ -122,8 +122,8 @@ def output_to_terminal(order_data):
         print(f"\nЗаявка с ID: {order_id}")
         print(f"Тип груза: {order_data.get('cargo_type', 'NONE')}")
         print(f"Тип кузова: {order_data.get('body_type', 'NONE')}")
-        print(f"Дата1: {order_data.get('date', 'NONE')}")
-        print(f"Дата: {order_data.get('date2', 'NONE')}")
+        print(f"Дата1: {order_data.get('formatted_date', 'NONE')}")
+        print(f"Дата2: {order_data.get('formatted_date2', 'NONE')}")
         print(f"Вес: {order_data.get('weight', 'NONE')}")
         print(f"Объем: {order_data.get('volume', 'NONE')}")
         print(f"Загрузка: {order_data.get('loading', 'NONE')}")
@@ -176,6 +176,9 @@ def format_date(date_str):
     try:
         # Разбиваем строку на части (например, '17 сен 12:00')
         parts = date_str.split()
+        if len(parts) < 3:
+            raise ValueError("Неверный формат даты. Ожидалось как минимум 3 части.")
+
         day = parts[0]  # День
         month = months.get(parts[1].lower(), '01')  # Месяц
         time_part = parts[2]  # Время
@@ -185,10 +188,9 @@ def format_date(date_str):
 
         # Извлекаем часы и минуты
         hour, minutes = time_part.split(":")
-
-        # Возвращаем также часы и минуты
+        
         return formatted_date, hour, minutes
-    except (IndexError, KeyError) as e:
+    except (IndexError, KeyError, ValueError) as e:
         print(f"Ошибка при обработке даты: {e}")
         return date_str, '00', '00'  # Если ошибка, возвращаем исходные значения
 
@@ -242,57 +244,53 @@ def parse_order_details():
         print(f"Ошибка при извлечении типа кузова: {e}")
         body_type = 'NONE'
 
-# Дата 1
+    # Дата 1
     try:
         # Извлечение даты с помощью JavaScript
-        date = driver.execute_script("""
-            var element = arguments[0];
-            return element.childNodes[0].nodeValue.trim();
-        """, driver.find_element(By.CSS_SELECTOR, "div.flex.mt-2 .flex.flex-col .text-primary"))
+        date_element = driver.find_element(By.CSS_SELECTOR, "div.flex.mt-2 .flex.flex-col .text-primary")
+        date = driver.execute_script("return arguments[0].childNodes[0].nodeValue.trim();", date_element)
 
-        # Ограничение строки до 12 символов (включая пробелы)
-        date = date[:12]
-        
-        # Выводим полученную строку для отладки
+        if len(date) > 12:
+            date = date[:12]
         print(f"Полученная дата загрузки: {date}")
 
-        # Применяем функцию преобразования даты
+        # Передаем извлеченную строку в функцию обработки
         formatted_date, data1_hour_ati, data1_minutes_ati = format_date(date)
+        
+        # Теперь у нас есть обработанная дата и время
         print(f"Дата загрузки после обработки: {formatted_date}")
         print(f"Часы: {data1_hour_ati}, Минуты: {data1_minutes_ati}")
-
+        
     except Exception as e:
         print(f"Ошибка при обработке даты загрузки: {e}")
         formatted_date = 'NONE'
         data1_hour_ati = '00'
         data1_minutes_ati = '00'
 
-# Дата 2
+    # Дата 2
     try:
-    # Извлечение даты с помощью JavaScript
-        date2 = driver.execute_script("""
-            var element = arguments[0];
-            return element.childNodes[0].nodeValue.trim();
-        """, driver.find_element(By.CSS_SELECTOR, "div.flex.mt-4 .flex.flex-col .text-primary"))
+        # Извлечение даты с помощью JavaScript
+        date2_element = driver.find_element(By.CSS_SELECTOR, "div.flex.mt-4 .flex.flex-col .text-primary")
+        date2 = driver.execute_script("return arguments[0].childNodes[0].nodeValue.trim();", date2_element)
 
-    # Ограничение строки до 12 символов (включая пробелы)
-        date2 = date2[:12]
-    
-    # Выводим полученную строку для отладки
+        if len(date2) > 12:
+            date2 = date2[:12]
         print(f"Полученная дата выгрузки: {date2}")
 
-    # Применяем ту же функцию для второго поля
-        formatted_date2, data2_hour_ati, data2_minutes_ati = format_date(date2)
+        # Передаем извлеченную строку в функцию обработки
+        formatted_date2, date2_hour_ati, date2_minutes_ati = format_date(date2)
+        
+        # Теперь у нас есть обработанная дата и время
         print(f"Дата выгрузки после обработки: {formatted_date2}")
-        print(f"Часы: {data2_hour_ati}, Минуты: {data2_minutes_ati}")
-
+        print(f"Часы: {date2_hour_ati}, Минуты: {date2_minutes_ati}")
+        
     except Exception as e:
         print(f"Ошибка при обработке даты выгрузки: {e}")
         formatted_date2 = 'NONE'
-        data2_hour_ati = '00'
-        data2_minutes_ati = '00'
+        date2_hour_ati = '00'
+        date2_minutes_ati = '00'
 
-
+    
     try:
         loading = driver.execute_script("""
             var element = arguments[0];
