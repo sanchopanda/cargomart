@@ -123,7 +123,8 @@ def output_to_terminal(order_data):
         print(f"\nЗаявка с ID: {order_id}")
         print(f"Тип груза: {order_data.get('cargo_type', 'NONE')}")
         print(f"Тип кузова: {order_data.get('body_type', 'NONE')}")
-        print(f"Дата: {order_data.get('date', 'NONE')}")
+        print(f"Дата1: {order_data.get('date', 'NONE')}")
+        print(f"Дата2: {order_data.get('date2', 'NONE')}")
         print(f"Вес: {order_data.get('weight', 'NONE')}")
         print(f"Объем: {order_data.get('volume', 'NONE')}")
         print(f"Загрузка: {order_data.get('loading', 'NONE')}")
@@ -132,6 +133,7 @@ def output_to_terminal(order_data):
         print(f"Фирма: {order_data.get('company', 'NONE')}")
         print(f"Город: {order_data.get('city', 'NONE')}")
         print(f"Телефон: {order_data.get('phone', 'NONE')}")
+
         
         # Добавление ID в список обработанных и сохранение
         processed_orders.append(order_id)
@@ -162,36 +164,38 @@ def save_processed_orders(processed_orders):
 processed_orders = load_processed_orders()
 
 # Функция для преобразования даты
-def format_date(date):
+def format_date(date_str):
     # Определяем текущий год
     current_year = datetime.datetime.now().year
-    
-    # Создаем словарь для преобразования названий месяцев
+
+    # Словарь для преобразования названий месяцев
     months = {
-        "янв": "01",
-        "фев": "02",
-        "мар": "03",
-        "апр": "04",
-        "май": "05",
-        "июн": "06",
-        "июл": "07",
-        "авг": "08",
-        "сен": "09",
-        "окт": "10",
-        "ноя": "11",
-        "дек": "12"
+        "янв": "01", "фев": "02", "мар": "03", "апр": "04",
+        "май": "05", "июн": "06", "июл": "07", "авг": "08",
+        "сен": "09", "окт": "10", "ноя": "11", "дек": "12"
     }
 
-    # Разбиваем дату на части
-    parts = date.split(' ')
-    day = parts[0]
-    month = months.get(parts[1].lower(), '01')  # Получаем числовое значение месяца
-    time = parts[2]
+    try:
+        # Разбиваем строку на части (например, '17 сен 12:00')
+        parts = date_str.split()
+        if len(parts) < 3:
+            raise ValueError("Неверный формат даты. Ожидалось как минимум 3 части.")
 
-    # Формируем дату в формате дд.мм.гггг чч:мм
-    formatted_date = f"{day}.{month}.{current_year} {time}"
-    
-    return formatted_date
+        day = parts[0]  # День
+        month = months.get(parts[1].lower(), '01')  # Месяц
+        time_part = parts[2]  # Время
+
+        # Форматируем дату в формате дд.мм.гггг чч:мм
+        formatted_date = f"{day}.{month}.{current_year} {time_part}"
+
+        # Извлекаем часы и минуты
+        hour, minutes = time_part.split(":")
+        
+        return formatted_date, hour, minutes
+    except (IndexError, KeyError, ValueError) as e:
+        print(f"Ошибка при обработке даты: {e}")
+        return date_str, '00', '00'  # Если ошибка, возвращаем исходные значения
+
 
 # Функция парсинга данных заявки
 def parse_order_details():
@@ -242,12 +246,51 @@ def parse_order_details():
         print(f"Ошибка при извлечении типа кузова: {e}")
         body_type = 'NONE'
     
+    # Дата 1
     try:
-        date = driver.find_element(By.CSS_SELECTOR, "p.truncate.text-on-surface-variant").text or 'NONE'
-        date = format_date(date)
+        # Извлечение даты с помощью JavaScript
+        date_element = driver.find_element(By.CSS_SELECTOR, "div.flex.mt-2 .flex.flex-col .text-primary")
+        date = driver.execute_script("return arguments[0].childNodes[0].nodeValue.trim();", date_element)
+
+        if len(date) > 12:
+            date = date[:12]
+        print(f"Полученная дата загрузки: {date}")
+
+        # Передаем извлеченную строку в функцию обработки
+        formatted_date, date1_hour_ati, date1_minutes_ati = format_date(date)
+        
+        # Теперь у нас есть обработанная дата и время
+        print(f"Дата загрузки после обработки: {formatted_date}")
+        print(f"Часы: {date1_hour_ati}, Минуты: {date1_minutes_ati}")
+        
     except Exception as e:
-        print(f"Ошибка при извлечении даты: {e}")
-        date = 'NONE'
+        print(f"Ошибка при обработке даты загрузки: {e}")
+        formatted_date = 'NONE'
+        date1_hour_ati = '00'
+        date1_minutes_ati = '00'
+
+    # Дата 2
+    try:
+        # Извлечение даты с помощью JavaScript
+        date2_element = driver.find_element(By.CSS_SELECTOR, "div.flex.mt-4 .flex.flex-col .text-primary")
+        date2 = driver.execute_script("return arguments[0].childNodes[0].nodeValue.trim();", date2_element)
+
+        if len(date2) > 12:
+            date2 = date2[:12]
+        print(f"Полученная дата выгрузки: {date2}")
+
+        # Передаем извлеченную строку в функцию обработки
+        formatted_date2, date2_hour_ati, date2_minutes_ati = format_date(date2)
+        
+        # Теперь у нас есть обработанная дата и время
+        print(f"Дата выгрузки после обработки: {formatted_date2}")
+        print(f"Часы: {date2_hour_ati}, Минуты: {date2_minutes_ati}")
+        
+    except Exception as e:
+        print(f"Ошибка при обработке даты выгрузки: {e}")
+        formatted_date2 = 'NONE'
+        date2_hour_ati = '00'
+        date2_minutes_ati = '00'
 
     try:
         loading = driver.execute_script("""
@@ -281,7 +324,8 @@ def parse_order_details():
     city = 'Москва'
     phone = '+79613423284'
     
-    create_application(order_id, loading, unloading, cargo_type, weight, volume, bet)
+    create_application(order_id, loading, unloading, cargo_type, weight, volume, bet, formatted_date, date1_hour_ati, 
+                       date1_minutes_ati, formatted_date2, date2_hour_ati, date2_minutes_ati)
 
 
     # Возвращаем словарь с данными
@@ -289,7 +333,12 @@ def parse_order_details():
         "order_id": order_id,
         "cargo_type": cargo_type,
         "body_type": body_type,
-        "date": date,
+        "date": formatted_date,
+        "date1_hour_ati": date1_hour_ati,
+        "date1_minutes_ati": date1_minutes_ati,
+        "date2": formatted_date2,
+        "date2_hour_ati": date2_hour_ati,
+        "date2_minutes_ati": date2_minutes_ati,
         "weight": weight,
         "volume": volume,
         "loading": loading,

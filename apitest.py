@@ -25,27 +25,30 @@ def get_city_id(loading, unloading, authorization_token):
     if response.status_code == 200:
         data = response.json()
 
-        # Извлекаем city_id для каждого адреса
-        loading_info = data.get(loading, {})
-        unloading_info = data.get(unloading, {})
+        # Проверяем, что данные корректны
+        if data and len(data) >= 2:
+            loading_info = data[0]
+            unloading_info = data[1]
 
-        loading_city_id = loading_info.get("city_id") if loading_info.get("is_success") else None
-        unloading_city_id = unloading_info.get("city_id") if unloading_info.get("is_success") else None
+            loading_city_id = loading_info.get("city_id") if loading_info.get("is_success") else None
+            unloading_city_id = unloading_info.get("city_id") if unloading_info.get("is_success") else None
 
-        return loading_city_id, unloading_city_id
+            return loading_city_id, unloading_city_id
+        else:
+            print("Некорректные данные от API")
+            return None, None
     else:
         print(f"Ошибка при получении ID городов: {response.status_code}")
         return None, None
 
-
 # Функция для отправки заявки через API
-def create_application(order_id, loading, unloading, cargo_type, weight, volume, bet):
-
+def create_application(order_id, loading, unloading, cargo_type, weight, volume, bet, formatted_date, data1_hour_ati, date1_minutes_ati, formatted_date2, date2_hour_ati, date2_minutes_ati):
     loading_city_id, unloading_city_id = get_city_id(loading, unloading, authorization_token)
     if loading_city_id is None or unloading_city_id is None:
         print("Ошибка получения city_id для погрузки или выгрузки")
         return
 
+    # Объявление payload должно быть здесь, вне условия
     payload = {
         "cargo_application": {
             "external_id": order_id,
@@ -62,8 +65,16 @@ def create_application(order_id, loading, unloading, cargo_type, weight, volume,
                     "dates": {
                         "type": "ready",
                         "time": {
-                            "type": "round-the-clock"
-                        }
+                            "type": "from-date",
+                            "time": {
+                                "type": "bounded",
+                                "start": {
+                                    "hour": data1_hour_ati,
+                                    "minute": date1_minutes_ati
+                                }
+                            }
+                        },
+                        "first_date": formatted_date
                     },
                     "cargos": [
                         {
@@ -86,6 +97,20 @@ def create_application(order_id, loading, unloading, cargo_type, weight, volume,
                         "type": "manual",
                         "city_id": unloading_city_id
                     },
+                    "dates": {
+                        "type": "ready",
+                        "time": {
+                            "type": "from-date",
+                            "time": {
+                                "type": "bounded",
+                                "start": {
+                                    "hour": date2_hour_ati,
+                                    "minute": date2_minutes_ati
+                                }
+                            }
+                        },
+                        "first_date": formatted_date2
+                    }
                 },
                 "is_round_trip": False
             },
@@ -183,14 +208,17 @@ def create_application(order_id, loading, unloading, cargo_type, weight, volume,
         }
     }
 
-    response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+    # Здесь уже использование payload
+    try:
+        response = requests.post(api_url, headers=headers, json=payload)
+        print(f"Статус ответа: {response.status_code}")
+        print(f"Тело ответа: {response.text}")
+        print(f"loading_city_id: {loading_city_id}, unloading_city_id: {unloading_city_id}")
+        print(f"Параметры заявки: {json.dumps(payload, indent=2)}")
 
-    print(f"Статус ответа: {response.status_code}")
-    print(f"Тело ответа: {response.text}")
-    print(f"loading_city_id: {loading_city_id}, unloading_city_id: {unloading_city_id}")
-    print(f"Параметры заявки: {json.dumps(payload, indent=2)}")
-
-    if response.status_code == 200:
-        print("Заявка успешно создана!")
-    else:
-        print(f"Ошибка при создании заявки: {response.status_code} - {response.text}")
+        if response.status_code == 200:
+            print("Заявка успешно создана!")
+        else:
+            print(f"Ошибка при создании заявки: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Ошибка при отправке запроса: {e}")
