@@ -1,9 +1,13 @@
 import requests
 import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Параметры для API
 api_url = "https://api.ati.su/v2/cargos/"
-authorization_token = "2d4ab51aca454cdd955a35888ea0fd22"
+authorization_token = os.getenv('ATI_TOKEN')
 headers = {
     "Authorization": f"Bearer {authorization_token}",
     "Content-Type": "application/json"
@@ -23,12 +27,16 @@ def get_city_id(loading, unloading, authorization_token):
     response = requests.post(api_url, headers=headers, data=json.dumps(body), timeout=15)
 
     if response.status_code == 200:
-        data = response.json()
+        # Извлечение значений
+        data = response.json()  # Преобразуем текст ответа в JSON
+        # Извлечение значений
+        values = list(data.values())
+        print(values)
 
         # Проверяем, что данные корректны
-        if data and len(data) >= 2:
-            loading_info = data[0]
-            unloading_info = data[1]
+        if data and len(values) >= 2:
+            loading_info = values[0]
+            unloading_info = values[1]
 
             loading_city_id = loading_info.get("city_id") if loading_info.get("is_success") else None
             unloading_city_id = unloading_info.get("city_id") if unloading_info.get("is_success") else None
@@ -42,7 +50,21 @@ def get_city_id(loading, unloading, authorization_token):
         return None, None
 
 # Функция для отправки заявки через API
-def create_application(order_id, loading, unloading, cargo_type, weight, volume, bet, formatted_date, data1_hour_ati, date1_minutes_ati, formatted_date2, date2_hour_ati, date2_minutes_ati):
+def create_application(params):
+    order_id = params.get('order_id')
+    loading = params.get('loading')
+    unloading = params.get('unloading')
+    cargo_type = params.get('cargo_type')
+    weight = params.get('weight')
+    volume = params.get('volume')
+    bet = params.get('bet')
+    formatted_date_loading = params.get('formatted_date_loading')
+    time_start_loading = params.get('time_start_loading')
+    time_end_loading = params.get('time_end_loading')
+    formatted_date_unloading = params.get('formatted_date_unloading')
+    time_start_unloading = params.get('time_start_unloading')
+    time_end_unloading = params.get('time_end_unloading')
+    
     loading_city_id, unloading_city_id = get_city_id(loading, unloading, authorization_token)
     if loading_city_id is None or unloading_city_id is None:
         print("Ошибка получения city_id для погрузки или выгрузки")
@@ -57,24 +79,18 @@ def create_application(order_id, loading, unloading, cargo_type, weight, volume,
                     "city_id": loading_city_id,
                     "address": loading,
                     "location": {
-                        "city_id": loading_city_id,
                         "type": "manual",
-                        "organization_id": 900123,
-                        "address_id": 923899
+                        "city_id": loading_city_id,
+                        "address": loading
                     },
                     "dates": {
                         "type": "ready",
                         "time": {
-                            "type": "from-date",
-                            "time": {
                                 "type": "bounded",
-                                "start": {
-                                    "hour": data1_hour_ati,
-                                    "minute": date1_minutes_ati
-                                }
-                            }
-                        },
-                        "first_date": formatted_date
+                                "start": time_start_loading,
+                                "end": time_end_loading
+                            },
+                        "first_date": formatted_date_loading
                     },
                     "cargos": [
                         {
@@ -95,21 +111,17 @@ def create_application(order_id, loading, unloading, cargo_type, weight, volume,
                     "address": unloading,
                     "location": {
                         "type": "manual",
-                        "city_id": unloading_city_id
+                        "city_id": unloading_city_id,
+                        "address": unloading
                     },
                     "dates": {
                         "type": "ready",
-                        "time": {
-                            "type": "from-date",
-                            "time": {
+                         "time": {
                                 "type": "bounded",
-                                "start": {
-                                    "hour": date2_hour_ati,
-                                    "minute": date2_minutes_ati
-                                }
-                            }
-                        },
-                        "first_date": formatted_date2
+                                "start": time_start_unloading,
+                                "end": time_end_unloading
+                            },
+                        "first_date": formatted_date_unloading
                     }
                 },
                 "is_round_trip": False
@@ -196,14 +208,13 @@ def create_application(order_id, loading, unloading, cargo_type, weight, volume,
             },
             "boards": [
                 {
-                    "id": "66e555598643b0fdd5bd45fe",
+                    "id": os.getenv('BOARD_ID'),
                     "publication_mode": "now",
-                    "publication_time": "2024-09-17T12:00:00.000Z",
                     "cancel_publish_on_auction_bet": False,
                     "reservation_enabled": True
                 }
             ],
-            "note": "order_id",
+            "note": f"{order_id}",
             "contacts": [0]
         }
     }

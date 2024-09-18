@@ -8,22 +8,12 @@ import time
 import datetime
 import os
 import json
-from dadata import Dadata
 import re
 import platform
 import traceback
 from apitest import create_application  # Импортируй свою функцию
 
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Dadata
-token = "8b98a136687412491cf220d96838f48ffc495178"
-secret = "02a6d8e26bdaf701c89035cdc49024f7d6c324f5"
-dadata = Dadata(token, secret)
-
-#API
-authorization_token = "2d4ab51aca454cdd955a35888ea0fd22"
 
 # Путь к вашему chromedriver
 if platform.system() == 'Windows':
@@ -47,7 +37,7 @@ chrome_options.add_argument("--disable-popup-blocking")
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--headless")  # Запуск без интерфейса
+# chrome_options.add_argument("--headless")  # Запуск без интерфейса
 
 # Путь к файлу с cookies
 cookies_file = os.path.join(script_dir, 'cookies.json')
@@ -123,8 +113,8 @@ def output_to_terminal(order_data):
         print(f"\nЗаявка с ID: {order_id}")
         print(f"Тип груза: {order_data.get('cargo_type', 'NONE')}")
         print(f"Тип кузова: {order_data.get('body_type', 'NONE')}")
-        print(f"Дата1: {order_data.get('date', 'NONE')}")
-        print(f"Дата2: {order_data.get('date2', 'NONE')}")
+        print(f"Дата загрузки: {order_data.get('date_loading', 'NONE')}")
+        print(f"Дата выгрузки: {order_data.get('date_unloading', 'NONE')}")
         print(f"Вес: {order_data.get('weight', 'NONE')}")
         print(f"Объем: {order_data.get('volume', 'NONE')}")
         print(f"Загрузка: {order_data.get('loading', 'NONE')}")
@@ -176,25 +166,30 @@ def format_date(date_str):
     }
 
     try:
-        # Разбиваем строку на части (например, '17 сен 12:00')
+        # Разбиваем строку на части (например, '19 сен 03:00–05:00')
         parts = date_str.split()
         if len(parts) < 3:
             raise ValueError("Неверный формат даты. Ожидалось как минимум 3 части.")
 
         day = parts[0]  # День
         month = months.get(parts[1].lower(), '01')  # Месяц
-        time_part = parts[2]  # Время
+        time_part = parts[2]  # Время (например, 03:00–05:00)
 
-        # Форматируем дату в формате дд.мм.гггг чч:мм
-        formatted_date = f"{day}.{month}.{current_year} {time_part}"
+        # Форматируем дату в формате гггг-мм-дд
+        formatted_date = f"{current_year}-{month}-{day}"
 
-        # Извлекаем часы и минуты
-        hour, minutes = time_part.split(":")
-        
-        return formatted_date, hour, minutes
+        # Проверяем, есть ли диапазон времени
+        if '–' in time_part:
+            start_time, end_time = time_part.split('–')
+        else:
+            start_time = time_part
+            end_time = None
+
+        # Возвращаем дату и диапазон времени
+        return formatted_date, start_time, end_time
     except (IndexError, KeyError, ValueError) as e:
         print(f"Ошибка при обработке даты: {e}")
-        return date_str, '00', '00'  # Если ошибка, возвращаем исходные значения
+        return date_str, '00:00', '00:00'  # Если ошибка, возвращаем исходные значения
 
 
 # Функция парсинга данных заявки
@@ -202,6 +197,9 @@ def parse_order_details():
     try:
         order_id = driver.find_element(By.CSS_SELECTOR, '[data-test="order-serial"]').text or 'NONE'
         order_id = order_id.replace('№', '').strip()
+
+        print(f"ID заявки: {order_id}")
+
     except Exception as e:
         print(f"Ошибка при извлечении ID заявки: {e}")
         order_id = 'NONE'
@@ -257,17 +255,10 @@ def parse_order_details():
         print(f"Полученная дата загрузки: {date}")
 
         # Передаем извлеченную строку в функцию обработки
-        formatted_date, date1_hour_ati, date1_minutes_ati = format_date(date)
-        
-        # Теперь у нас есть обработанная дата и время
-        print(f"Дата загрузки после обработки: {formatted_date}")
-        print(f"Часы: {date1_hour_ati}, Минуты: {date1_minutes_ati}")
+        formatted_date_loading, time_start_loading, time_end_loading = format_date(date)
         
     except Exception as e:
         print(f"Ошибка при обработке даты загрузки: {e}")
-        formatted_date = 'NONE'
-        date1_hour_ati = '00'
-        date1_minutes_ati = '00'
 
     # Дата 2
     try:
@@ -280,17 +271,10 @@ def parse_order_details():
         print(f"Полученная дата выгрузки: {date2}")
 
         # Передаем извлеченную строку в функцию обработки
-        formatted_date2, date2_hour_ati, date2_minutes_ati = format_date(date2)
-        
-        # Теперь у нас есть обработанная дата и время
-        print(f"Дата выгрузки после обработки: {formatted_date2}")
-        print(f"Часы: {date2_hour_ati}, Минуты: {date2_minutes_ati}")
+        formatted_date_unloading, time_start_unloading, time_end_unloading = format_date(date2)
         
     except Exception as e:
         print(f"Ошибка при обработке даты выгрузки: {e}")
-        formatted_date2 = 'NONE'
-        date2_hour_ati = '00'
-        date2_minutes_ati = '00'
 
     try:
         loading = driver.execute_script("""
@@ -324,21 +308,33 @@ def parse_order_details():
     city = 'Москва'
     phone = '+79613423284'
     
-    create_application(order_id, loading, unloading, cargo_type, weight, volume, bet, formatted_date, date1_hour_ati, 
-                       date1_minutes_ati, formatted_date2, date2_hour_ati, date2_minutes_ati)
-
+    create_application({
+        'order_id': order_id,
+        'loading': loading,
+        'unloading': unloading,
+        'cargo_type': cargo_type,
+        'weight': weight,
+        'volume': volume,
+        'bet': bet,
+        'formatted_date_loading': formatted_date_loading,
+        'time_start_loading': time_start_loading,
+        'time_end_loading': time_end_loading,
+        'formatted_date_unloading': formatted_date_unloading,
+        'time_start_unloading': time_start_unloading,
+        'time_end_unloading': time_end_unloading
+    })
 
     # Возвращаем словарь с данными
     return {
         "order_id": order_id,
         "cargo_type": cargo_type,
         "body_type": body_type,
-        "date": formatted_date,
-        "date1_hour_ati": date1_hour_ati,
-        "date1_minutes_ati": date1_minutes_ati,
-        "date2": formatted_date2,
-        "date2_hour_ati": date2_hour_ati,
-        "date2_minutes_ati": date2_minutes_ati,
+        "date_loading": formatted_date_loading,
+        "time_start_loading": time_start_loading,
+        "time_end_loading": time_end_loading,
+        "date_unloading": formatted_date_unloading,
+        "time_start_unloading": time_start_unloading,
+        "time_end_unloading": time_end_unloading,
         "weight": weight,
         "volume": volume,
         "loading": loading,
@@ -361,12 +357,13 @@ def process_orders():
             for index in range(len(orders)):
                 try:
                     # Обновляем список заявок, чтобы работать с актуальными элементами
-                    orders = driver.find_elements(By.CSS_SELECTOR, '[data-name="tableRow"]')
+                    orders = driver.find_elements(By.CSS_SELECTOR, '[data-name="tableRow"]')[1:]
                     
                     # Открытие заявки
                     print(f"Открытие заявки {index + 1}")
                     orders[index].click()  # Кликаем по заявке
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '[data-test="order-serial"]')))
+                    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '[data-test="order-serial"]')))
+
                     
                     # Парсинг данных с заявки
                     order_data = parse_order_details()
