@@ -81,35 +81,32 @@ def get_route(data):
         
         processed_point = {
             "type": "loading" if point["type"] == "load" else "unloading",
-            "address": point["storage"]["address"] if point["storage"].get("address") else locality["fullName"] if locality else "",
             "location": {
-                "type": "manual",
-                
-                "address": point["storage"]["address"]
+                "type": "manual",                
+                "address": point["storage"]["address"] if point["storage"].get("address") else locality["fullName"] if locality else ""
             },
             'dates': {
                 "type": "from-date" if 'fromDate' in point else "ready",
                 "time": {
                     "type": "bounded" if point.get('fromTime') or point.get('toTime') else "round-the-clock",
-                    "start": point.get('fromTime', "00:00") if point.get('fromTime') or point.get('toTime') else None,
-                    "end": point.get('toTime', "00:00") if point.get('fromTime') or point.get('toTime') else None
+                    "start": point.get('fromTime', "00:00")[:5] if point.get('fromTime') or point.get('toTime') else None,
+                    "end": point.get('toTime', "00:00")[:5] if point.get('fromTime') or point.get('toTime') else None
                 },
                 "first_date": point.get('fromDate', None),
-                "last_date": point.get('toDate', None)
+                "last_date": point.get('toDate',  point.get('fromDate', None))
             }
         }
         points.append(processed_point)
     
     
     # Extract addresses from points
-    addresses = [point["address"] for point in points]
+    addresses = [point["location"]["address"] for point in points]
     
     # Get city_ids using getCityIds function
     city_ids = get_city_ids(addresses)
     
     # Add city_ids to corresponding points
     for point, city_id in zip(points, city_ids):
-        point["city_id"] = city_id 
         point["location"]["city_id"] = city_id
 
     return {

@@ -49,13 +49,9 @@ async def process_order(order):
                 "type": "without-bargaining",
                 "currency_type": currencyTypes[order["currencyCode"]],
                 # ToDo: разобраться тут
-                # "cash":
-                # "rate_without_nds":
-                "rates": {
-                    # "cash": ?,
-                    # "rate_without_nds": ?,
-                    "rate_with_nds": order["currentPrice"]                    
-                }           
+                # "rate_without_vat": "?",
+                # "cash": "?"
+                "rate_with_vat": order["currentPrice"]
             },
             "boards": [
                 {
