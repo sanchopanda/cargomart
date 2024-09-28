@@ -1,0 +1,143 @@
+{
+  "external_id": "73fb95be709e42d4ac0f567f36c014e8",
+  "route": {
+    "loading": {
+      "type": "loading",
+      "address": "Ленинградская обл, Ломоносовский р-н, деревня Разбегаево, д 8",
+      "location": {
+        "type": "manual",
+        "address": "Ленинградская обл, Ломоносовский р-н, деревня Разбегаево, д 8",
+        "city_id": 11596
+      },
+      "dates": {
+        "type": "from-date",
+        "time": {
+          "type": "bounded",
+          "start": "00:00",
+          "end": "00:00"
+        },
+        "first_date": "2024-09-29",
+        "last_date": "2024-09-29"
+      },
+      "city_id": 11596,
+      "cargos": [
+        {
+          "id": 1,
+          "name": "кондитерские изделия 18паллет",
+          "weight": {
+            "type": "tons",
+            "quantity": 7
+          },
+          "volume": {
+            "quantity": 35
+          }
+        }
+      ]
+    },
+    "unloading": {
+      "type": "unloading",
+      "address": "г Петрозаводск",
+      "location": {
+        "type": "manual",
+        "address": "г Петрозаводск",
+        "city_id": 195
+      },
+      "dates": {
+        "type": "from-date",
+        "time": {
+          "type": "bounded",
+          "start": "00:00",
+          "end": "00:00"
+        },
+        "first_date": "2024-09-30",
+        "last_date": "2024-09-30"
+      },
+      "city_id": 195
+    },
+    "way_points": [
+      {
+        "type": "loading",
+        "address": "Ленинградская обл, Ломоносовский р-н, деревня Разбегаево, д 8",
+        "location": {
+          "type": "manual",
+          "address": "Ленинградская обл, Ломоносовский р-н, деревня Разбегаево, д 8",
+          "city_id": 11596
+        },
+        "dates": {
+          "type": "from-date",
+          "time": {
+            "type": "bounded",
+            "start": "00:00",
+            "end": "00:00"
+          },
+          "first_date": "2024-09-29",
+          "last_date": "2024-09-29"
+        },
+        "city_id": 11596,
+        "cargos": [
+          {
+            "id": 1,
+            "name": "кондитерские изделия 18паллет",
+            "weight": {
+              "type": "tons",
+              "quantity": 7
+            },
+            "volume": {
+              "quantity": 35
+            }
+          }
+        ]
+      },
+      {
+        "type": "unloading",
+        "address": "г Петрозаводск",
+        "location": {
+          "type": "manual",
+          "address": "г Петрозаводск",
+          "city_id": 195
+        },
+        "dates": {
+          "type": "from-date",
+          "time": {
+            "type": "bounded",
+            "start": "00:00",
+            "end": "00:00"
+          },
+          "first_date": "2024-09-30",
+          "last_date": "2024-09-30"
+        },
+        "city_id": 195
+      }
+    ]
+  },
+  "truck": {
+    "load_type": "dont-care",
+    "body_types": [300],
+    "body_loading": {
+      "types": [4]
+    },
+    "body_unloading": {
+      "types": [4]
+    },
+    "temperature": {
+      "from": 15,
+      "to": 18
+    },
+    "documents": {
+      "medical_card": false
+    }
+  },
+  "payment": {
+    "type": "without-bargaining",
+    "currency_type": 1,
+    "rates": {
+      "rate_with_nds": "75000"
+    }
+  },
+  "boards": [
+    {
+      "id": "66e56d7e8071ae9303000a57"
+    }
+  ],
+  "contacts": [0]
+}
