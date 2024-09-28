@@ -9,6 +9,9 @@ from cargomart.process_order import process_orders
 from cargomart.cookies_manager import cookies_file
 
 class Cargomart:
+    def __init__(self):
+        self.orders = {}
+
     async def get_orders(self):
         # Загрузка куки из файла
         with open(cookies_file, 'r', encoding='utf-8') as file:
@@ -19,7 +22,7 @@ class Cargomart:
 
         # URL для GET-запроса
         base_url = 'https://cargomart.ru/api/v2/order'
-        all_orders = {}  # Словарь для хранения всех заявок
+        all_new_orders = {}  # Словарь для хранения новых заявок
 
         # Начальная пагинация
         page = 1
@@ -30,19 +33,30 @@ class Cargomart:
 
             # Проверка статуса и вывод ответа
             if response.status_code == 200:
-                data = response.json().get('data')
-                orders = await process_orders(data)  # Используем await для вызова асинхронной функции
+                data = response.json().get('data', {})
+                orders = data.get('order', [])
+                # полностью парсим только новые заявки
+                new_orders = [order for order in orders if order['id'] not in self.orders]
+                processed_orders = await process_orders(new_orders)  # Используем await для вызова асинхронной функции
+
+                # Для старых просто обновляем цену
+                for order in orders:
+                    order_id = order['id']
+                    if order_id in self.orders:
+                        # Update the rate_with_vat in the existing order
+                        self.orders[order_id]['payment']['rate_with_vat'] = order['currentPrice']
+                        processed_orders.append(self.orders[order_id])
+
                 pagination = data.get('pagination', {})
 
                 # Добавляем текущие заказы в общий словарь
-                for order in orders:
-                    print(order)
-                    all_orders[order['external_id']] = order  # Исправлено на 'external_id'
+                for order in processed_orders:
+                    all_new_orders[order['external_id']] = order  # Исправлено на 'external_id'
 
                 # Проверка, есть ли еще страницы
                 total = pagination.get('total', 0)
                 per_page = pagination.get('perPage', 0)
-                if len(orders) < per_page or total <= len(all_orders):
+                if len(orders) < per_page or total <= len(all_new_orders):
                     break  # Выходим из цикла, если больше нет страниц
                 page += 1  # Переходим к следующей странице
             elif response.status_code == 403:
@@ -59,4 +73,6 @@ class Cargomart:
                 print("Ошибка при выполнении запроса:", response.status_code)
                 break  # Выход из цикла при ошибке
 
-        return all_orders
+        # обновляем значение self.orders
+        self.orders = all_new_orders
+        return all_new_orders

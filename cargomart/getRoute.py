@@ -13,36 +13,53 @@ headers = {
 }
 
 # Функция для получения CityId
-def get_city_ids(addresses):
+def get_city_ids(addresses_from_points, addresses_from_locality):
     api_url = "https://api.ati.su/v1.0/dictionaries/locations/parse"
     headers = {
         "Authorization": f"Bearer {authorization_token}",
         "Content-Type": "application/json"
     }
 
-    response = requests.post(api_url, headers=headers, data=json.dumps(addresses), timeout=15)
+    response = requests.post(api_url, headers=headers, data=json.dumps(addresses_from_points), timeout=15)
 
     if response.status_code == 200:
         # Извлечение значений
         data = response.json()  # Преобразуем текст ответа в JSON
-        # Извлечение значений
-        values = list(data.values())
-        print(values)
 
         # Проверяем, что данные корректны
-        if data and len(values) >= 2:
+        if data:
             # Create an array to store city_ids
             city_ids = []
             
-            # Iterate through the values and extract city_ids
-            for value in values:
+            # Iterate through the data and extract city_ids
+            for index, (address, value) in enumerate(data.items()):
                 if value.get("is_success"):
                     city_id = value.get("city_id")
                     if city_id is not None:
                         city_ids.append(city_id)
+                    else:
+                        # Try to get city_id using the address from locality
+                        locality_address = addresses_from_locality[index]
+                        locality_response = requests.post(api_url, headers=headers, data=json.dumps([locality_address]), timeout=15)
+                        if locality_response.status_code == 200:
+                            locality_data = locality_response.json()
+                            locality_value = locality_data.get(locality_address, {})
+                            if locality_value.get("is_success"):
+                                locality_city_id = locality_value.get("city_id")
+                                if locality_city_id is not None:
+                                    city_ids.append(locality_city_id)
+                                else:
+                                    city_ids.append(None)
+                                    print(f"City ID not found for both addresses: {address} and {locality_address}")
+                            else:
+                                city_ids.append(None)
+                                print(f"Failed to get city ID for both addresses: {address} and {locality_address}")
+                        else:
+                            city_ids.append(None)
+                            print(f"Error getting city ID for locality address: {locality_address}")
                 else:
                     city_ids.append(None)  # Append None for unsuccessful entries
-            
+                    print(f"Failed to get city ID for address: {address}")
          
 
             return city_ids
@@ -73,6 +90,7 @@ def get_route(data):
 
     points = []
 
+    addresses_from_locality = []
     
     for point in order['routePoint']:
         
@@ -97,13 +115,16 @@ def get_route(data):
             }
         }
         points.append(processed_point)
+
+        addresses_from_locality.append(locality["fullName"] if locality else point["storage"].get("address", ""))
+        
     
-    
-    # Extract addresses from points
-    addresses = [point["location"]["address"] for point in points]
-    
-    # Get city_ids using getCityIds function
-    city_ids = get_city_ids(addresses)
+    adresses_from_points = [point["location"]["address"] for point in points]
+   
+    try:
+        city_ids = get_city_ids(adresses_from_points, addresses_from_locality)
+    except Exception as e:
+        raise Exception(f"Error getting city IDs: {str(e)}")
     
     # Add city_ids to corresponding points
     for point, city_id in zip(points, city_ids):

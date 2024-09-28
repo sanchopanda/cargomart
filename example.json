@@ -1,25 +1,27 @@
 {
+  "external_id": "996cc993576644b0863c5d408e798bad",
   "route": {
     "loading": {
+      "type": "loading",
       "location": {
         "type": "manual",
-        "address": "Московская обл, г Ногинск, рп Обухово, ш Кудиновское, д 4",
-        "city_id": 1268
+        "address": "городской поселок имени Свердлова, Всеволожский район, Ленинградская область, Россия",
+        "city_id": 10248
       },
       "dates": {
         "type": "from-date",
         "time": {
           "type": "bounded",
-          "start": "09:00:00",
+          "start": "11:00",
           "end": "00:00"
         },
-        "first_date": "2024-09-29",
-        "last_date": null
+        "first_date": "2024-09-30",
+        "last_date": "2024-09-30"
       },
       "cargos": [
         {
           "id": 1,
-          "name": "Продукты питания",
+          "name": "тнп",
           "weight": {
             "type": "tons",
             "quantity": 20
@@ -34,36 +36,32 @@
       "type": "unloading",
       "location": {
         "type": "manual",
-        "address": "ул. 2-я Гражданская",
-        "city_id": 3611
+        "address": "поселок Колодезный, Каширский район, Воронежская область, Россия",
+        "city_id": 5077
       },
       "dates": {
         "type": "from-date",
         "time": {
           "type": "bounded",
-          "start": "08:00:00",
+          "start": "12:00",
           "end": "00:00"
         },
         "first_date": "2024-10-01",
-        "last_date": null
+        "last_date": "2024-10-01"
       }
     },
-    "way_points": []
+    "way_points": null
   },
   "truck": {
-    "trucks_count": 1,
     "load_type": "dont-care",
-    "body_types": [300],
+    "body_types": [200],
     "body_loading": {
       "types": [4]
     },
     "body_unloading": {
       "types": [4]
     },
-    "temperature": {
-      "from": 15,
-      "to": 20
-    },
+    "temperature": null,
     "documents": {
       "medical_card": false
     }
@@ -71,7 +69,7 @@
   "payment": {
     "type": "without-bargaining",
     "currency_type": 1,
-    "rate_with_vat": "36300"
+    "rate_with_vat": "65000"
   },
   "boards": [
     {

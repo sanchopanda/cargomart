@@ -22,11 +22,15 @@ async def process_order(order):
         data = response.json()['data']  # Поправил на .json(), так как это JSON-ответ
         order_data = data.get('order')
 
-        print(order_data.get('id'))
+        try:
+            route = get_route(data)
+        except Exception as e:
+            print(f"Error in get_route for order {order_data.get('id')}: {str(e)}")
+            return None  # Skip this order if there's an error in get_route
 
         ati_order = {
             "external_id": order_data.get('id'),
-            "route": get_route(data),
+            "route": route,
             "truck": {
                 "load_type": "dont-care",
                 "body_types": [truckTypes[order_data["truckTypeId"]]],
@@ -66,14 +70,14 @@ async def process_order(order):
     return None
 
 
-async def process_orders(response):
+async def process_orders(orders):
     processed_orders = []
 
     # Обработка заказов
-    if response['order']:
-        order = response['order'][1]  # Только первый заказ
+    for order in orders:
         processed_order = await process_order(order)
-        if processed_order:
+        if processed_order is not None:
             processed_orders.append(processed_order)
+           
 
     return processed_orders
