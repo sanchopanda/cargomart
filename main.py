@@ -33,8 +33,10 @@ while True:
         if order_id not in orders:
             # Create new order
             result = create_order(new_order)
+            
             orders[order_id] = result
-        else:
+               
+        elif orders[order_id] is not None:
             # Check if rate has changed
             new_rate = int(new_order['payment']['rate_with_vat'])
             old_rate = int(orders[order_id]['payment']['rate_with_vat'])
@@ -45,9 +47,9 @@ while True:
                 orders[order_id]['payment']['rate_with_vat'] = new_rate
     # Check for orders to delete
     for order_id in list(orders.keys()):
-        if order_id not in new_orders:
+        if order_id not in new_orders and orders[order_id] is not None:
             cargo_id = orders[order_id]['cargo_id']
             delete_order(cargo_id)
             del orders[order_id]
     # Wait for 5 minutes
-    time.sleep(300)
+    time.sleep(60)
