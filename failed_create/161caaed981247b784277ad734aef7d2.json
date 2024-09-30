@@ -13,7 +13,7 @@
                 "time": {
                     "type": "bounded",
                     "start": "10:00",
-                    "end": "00:00"
+                    "end": null
                 },
                 "first_date": "2024-10-01",
                 "last_date": "2024-10-01"
@@ -40,7 +40,7 @@
                 "city_id": 1832
             },
             "dates": {
-                "type": "from-date",
+                "type": null,
                 "time": {
                     "type": "bounded",
                     "start": "08:00",
@@ -79,10 +79,11 @@
     },
     "boards": [
         {
-            "id": "66e56d7e8071ae9303000a57",
+            "id": "66f99dab06059a87642442be",
             "reservation_enabled": true
         }
     ],
+    "note": "https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D161caaed981247b784277ad734aef7d2",
     "contacts": [
         0
     ]

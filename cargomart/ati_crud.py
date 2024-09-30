@@ -16,6 +16,7 @@ headers = {
 
 def create_order(order):
     # Create order
+    print(order['external_id'])
     response = requests.post('https://api.ati.su/v2/cargos', headers=headers, json={'cargo_application': order})
     if response.status_code == 200:
         print(f"Successfully created order with id: {order['external_id']}")
@@ -40,6 +41,7 @@ def update_order(order_id, order):
     response = requests.put(f'https://api.ati.su/v2/cargos/{order_id}', headers=headers, json={'cargo_application': order})
     if response.status_code == 200:
         print(f"Successfully updated order with id: {order_id}")
+        return response.json()['cargo_application']
     else:
         print(f"Failed to update order with id: {order_id}. Status code: {response.status_code}")
 

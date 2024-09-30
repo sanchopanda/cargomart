@@ -26,7 +26,6 @@ class Cargomart:
 
         # Начальная пагинация
         page = 1
-
         while True:
             # Выполнение GET-запроса с добавлением куки в заголовки
             response = requests.get(base_url, cookies=cookies, params={'page': page})

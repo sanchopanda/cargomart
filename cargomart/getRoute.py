@@ -49,11 +49,9 @@ def get_city_ids(addresses_from_points, addresses_from_locality):
                                 if locality_city_id is not None:
                                     city_ids.append(locality_city_id)
                                 else:
-                                    city_ids.append(None)
-                                    print(f"City ID not found for both addresses: {address} and {locality_address}")
+                                    raise ValueError(f"City ID not found for both addresses: {address} and {locality_address}")
                             else:
-                                city_ids.append(None)
-                                print(f"Failed to get city ID for both addresses: {address} and {locality_address}")
+                                raise ValueError(f"Failed to get city ID for both addresses: {address} and {locality_address}")
                         else:
                             city_ids.append(None)
                             print(f"Error getting city ID for locality address: {locality_address}")
@@ -92,7 +90,7 @@ def get_route(data):
 
     addresses_from_locality = []
     
-    for point in order['routePoint']:
+    for index, point in enumerate(order['routePoint']):
         
         # Find the corresponding locality for this point
         locality = next((loc for loc in data['locality'] if loc['id'] == point['storage']['code']), None)
@@ -104,11 +102,11 @@ def get_route(data):
                 "address": point["storage"]["address"] if point["storage"].get("address") else locality["fullName"] if locality else ""
             },
             'dates': {
-                "type": "from-date" if 'fromDate' in point else "ready",
+                "type": "from-date" if index == 0 else None,
                 "time": {
                     "type": "bounded" if point.get('fromTime') or point.get('toTime') else "round-the-clock",
-                    "start": point.get('fromTime', "00:00")[:5] if point.get('fromTime') or point.get('toTime') else None,
-                    "end": point.get('toTime', "00:00")[:5] if point.get('fromTime') or point.get('toTime') else None
+                    "start": point.get('fromTime')[:5] if point.get('fromTime') else None,
+                    "end": point.get('toTime')[:5] if point.get('toTime') else None
                 },
                 "first_date": point.get('fromDate', None),
                 "last_date": point.get('toDate',  point.get('fromDate', None))

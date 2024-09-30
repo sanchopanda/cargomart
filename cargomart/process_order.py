@@ -63,6 +63,7 @@ async def process_order(order):
                     "reservation_enabled": True
                 }
             ],
+            "note": f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data['id']}",
             "contacts": [0]
         }
 
@@ -74,10 +75,16 @@ async def process_orders(orders):
     processed_orders = []
 
     # Обработка заказов
-    for order in orders:
-        processed_order = await process_order(order)
-        if processed_order is not None:
-            processed_orders.append(processed_order)
+    # for order in orders:
+    #     processed_order = await process_order(order)
+    #     if processed_order is not None:
+    #         processed_orders.append(processed_order)
+
+    processed_order = await process_order(orders[0])
+    if processed_order is not None:
+        processed_orders.append(processed_order)
            
 
     return processed_orders
+
+
