@@ -16,6 +16,7 @@ with open(cookies_file, 'r', encoding='utf-8') as file:
 cookies = {cookie['name']: cookie['value'] for cookie in cookies_data}
 
 
+
 async def process_order(order):
     response = requests.get(api_url + str(order['id']), cookies=cookies)
     if response.status_code == 200:
@@ -28,8 +29,20 @@ async def process_order(order):
             print(f"Error in get_route for order {order_data.get('id')}: {str(e)}")
             return None  # Skip this order if there's an error in get_route
 
+        current_price = order.get("currentPrice")
+        if current_price is None:
+            print(f"Warning: 'currentPrice' not found for order {order_data.get('id')}")
+            return None
+
+        if isinstance(current_price, str):
+            try:
+                current_price = float(current_price.replace(',', '.'))
+            except ValueError:
+                print(f"Error: Unable to convert currentPrice '{current_price}' to float for order {order_data.get('id')}")
+                return None
+
         ati_order = {
-            "external_id": order_data.get('id'),
+            "external_id": f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data.get('id')}",
             "route": route,
             "truck": {
                 "load_type": "dont-care",
@@ -55,36 +68,41 @@ async def process_order(order):
                 # ToDo: разобраться тут
                 # "rate_without_vat": "?",
                 # "cash": "?"
-                "rate_with_vat": order["currentPrice"]
+                "rate_with_vat": int(round(current_price * 0.85, -2)),
+                "rate_without_vat": int(round(current_price * 0.85 / 1.2, -2))
             },
             "boards": [
                 {
                     "id": os.getenv('BOARD_ID'),
-                    "reservation_enabled": True
+                    "reservation_enabled": False
                 }
-            ],
-            "note": f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data['id']}",
-            "contacts": [0]
+            ]
         }
 
         return ati_order
+    else:
+        error_message = f"Error: Unable to process order {order.get('id')}. Invalid or missing data."
+        # error_data = response.json()
+        # if 'message' in error_data and error_data['message']:
+        #     error_message = error_data['message'][0].get('title', 'Unknown error')
+        #     print(f"Error: {error_message}")
+          
     return None
 
 
 async def process_orders(orders):
+
     processed_orders = []
 
-    # Обработка заказов
-    # for order in orders:
-    #     processed_order = await process_order(order)
-    #     if processed_order is not None:
-    #         processed_orders.append(processed_order)
+    for order in orders:
+        processed_order = await process_order(order)
+        if processed_order is not None:
+            processed_orders.append(processed_order)
+            
 
-    processed_order = await process_order(orders[0])
-    if processed_order is not None:
-        processed_orders.append(processed_order)
-           
+    # processed_order = await process_order(orders[0])
+    # if processed_order is not None:
+    #     processed_orders.append(processed_order)
 
     return processed_orders
-
 

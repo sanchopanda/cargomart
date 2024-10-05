@@ -20,53 +20,58 @@ def get_city_ids(addresses_from_points, addresses_from_locality):
         "Content-Type": "application/json"
     }
 
-    response = requests.post(api_url, headers=headers, data=json.dumps(addresses_from_points), timeout=15)
+    other_addresses = addresses_from_points
+
+    # Попытка получить ответ с addresses_from_points
+    response = requests.post(api_url, headers=headers, data=json.dumps(addresses_from_locality), timeout=15)
+
+    # Если ответ не 200, пробуем с addresses_from_locality
+    if response.status_code != 200:
+        # print(f"Ошибка при получении ID городов с addresses_from_points: {response.status_code}")
+        response = requests.post(api_url, headers=headers, data=json.dumps(addresses_from_points), timeout=15)
+        other_addresses = addresses_from_locality
 
     if response.status_code == 200:
-        # Извлечение значений
-        data = response.json()  # Преобразуем текст ответа в JSON
-
-        # Проверяем, что данные корректны
+        data = response.json()
         if data:
-            # Create an array to store city_ids
-            city_ids = []
-            
-            # Iterate through the data and extract city_ids
+            processed_addresses = []
             for index, (address, value) in enumerate(data.items()):
                 if value.get("is_success"):
                     city_id = value.get("city_id")
-                    if city_id is not None:
-                        city_ids.append(city_id)
+                    street = value.get("street")
+                    if city_id is not None and city_id != 1020:
+                        processed_addresses.append({"city_id": city_id, "street": street, address: address})
                     else:
-                        # Try to get city_id using the address from locality
-                        locality_address = addresses_from_locality[index]
-                        locality_response = requests.post(api_url, headers=headers, data=json.dumps([locality_address]), timeout=15)
-                        if locality_response.status_code == 200:
-                            locality_data = locality_response.json()
-                            locality_value = locality_data.get(locality_address, {})
-                            if locality_value.get("is_success"):
-                                locality_city_id = locality_value.get("city_id")
-                                if locality_city_id is not None:
-                                    city_ids.append(locality_city_id)
+                        # Существующая логика для получения city_id из locality
+                        other_address = other_addresses[index]
+                        other_response = requests.post(api_url, headers=headers, data=json.dumps([other_address]), timeout=15)
+                        if other_response.status_code == 200:
+                            other_data = other_response.json()
+                            other_value = other_data.get(other_address, {})
+                            if other_value.get("is_success"):
+                                other_city_id = other_value.get("city_id")
+                                if other_city_id is not None and other_city_id != 1020:
+                                    processed_addresses.append({"city_id": other_city_id, "street": other_value.get("street"), address: other_address})
                                 else:
                                     raise ValueError(f"City ID not found for both addresses: {address} and {locality_address}")
                             else:
                                 raise ValueError(f"Failed to get city ID for both addresses: {address} and {locality_address}")
                         else:
-                            city_ids.append(None)
+                            processed_addresses.append(None)
                             print(f"Error getting city ID for locality address: {locality_address}")
                 else:
-                    city_ids.append(None)  # Append None for unsuccessful entries
+                    processed_addresses.append(None)
                     print(f"Failed to get city ID for address: {address}")
-         
 
-            return city_ids
+            return processed_addresses
         else:
             print("Некорректные данные от API")
-            return None, None
+            return None
     else:
         print(f"Ошибка при получении ID городов: {response.status_code}")
-        return None, None
+        # print("addresses_from_points:", addresses_from_points)
+        # print("addresses_from_locality:", addresses_from_locality)
+        return None
 
 def get_route(data):
 
@@ -89,18 +94,31 @@ def get_route(data):
     points = []
 
     addresses_from_locality = []
+    addresses_from_points = []
     
     for index, point in enumerate(order['routePoint']):
         
         # Find the corresponding locality for this point
         locality = next((loc for loc in data['locality'] if loc['id'] == point['storage']['code']), None)
+
+        coordinates = None
+        if locality and locality.get("coordinates"):
+            coordinates = {
+                "longitude": locality["coordinates"].get("longitude"),
+                "latitude": locality["coordinates"].get("latitude")
+            }
+        elif point["storage"].get("coordinate"):
+            coordinates = {
+                "longitude": point["storage"]["coordinate"].get("longitude"),
+                "latitude": point["storage"]["coordinate"].get("latitude")
+            }
         
         processed_point = {
             "type": "loading" if point["type"] == "load" else "unloading",
             "location": {
-                "type": "manual",                
-                "address": point["storage"]["address"] if point["storage"].get("address") else locality["fullName"] if locality else ""
-            },
+                "type": "manual",   
+                "coordinates": coordinates,
+            },            
             'dates': {
                 "type": "from-date" if index == 0 else None,
                 "time": {
@@ -115,18 +133,26 @@ def get_route(data):
         points.append(processed_point)
 
         addresses_from_locality.append(locality["fullName"] if locality else point["storage"].get("address", ""))
-        
-    
-    adresses_from_points = [point["location"]["address"] for point in points]
+        addresses_from_points.append(point["storage"]["address"] if point["storage"].get("address") else locality["fullName"] if locality else "")    
    
     try:
-        city_ids = get_city_ids(adresses_from_points, addresses_from_locality)
+        processed_addresses = get_city_ids(addresses_from_points, addresses_from_locality)
     except Exception as e:
         raise Exception(f"Error getting city IDs: {str(e)}")
     
     # Add city_ids to corresponding points
-    for point, city_id in zip(points, city_ids):
-        point["location"]["city_id"] = city_id
+    for point, processed_address in zip(points, processed_addresses):
+        point["location"]["city_id"] = processed_address.get('city_id')
+        if processed_address.get('street'):
+            point["location"]["address"] = processed_address['street']
+        elif processed_address.get('city_id') == 1 and processed_address.get('address'):
+            address = processed_address.get('address', '')
+            address = address.lower().replace('город санкт-петербург', '').replace('г санкт-петербург', '').strip()
+            point["location"]["address"] = address
+        elif processed_address.get('city_id') == 3611 and processed_address.get('address'):
+            address = processed_address.get('address', '')
+            address = address.lower().replace('город москва', '').replace('г москва', '').strip()
+            point["location"]["address"] = address
 
     return {
         "loading": {**points[0], "cargos": cargos},

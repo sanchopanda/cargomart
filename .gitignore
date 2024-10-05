@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 venv
 processed_ids.json
+failed_create
+failed_updated

@@ -21,13 +21,18 @@ class Cargomart:
         cookies = {cookie['name']: cookie['value'] for cookie in cookies_data}
 
         # URL для GET-запроса
-        base_url = 'https://cargomart.ru/api/v2/order'
+        base_url = 'https://cargomart.ru/api/v2/order?filter%5Bavailable%5D=true&filter%5BorderType%5D%5B%5D=auction&filter%5BorderType%5D%5B%5D=express&filter%5Bkind%5D%5B%5D=project&filter%5Bkind%5D%5B%5D=ftl&filter%5Bkind%5D%5B%5D=offer&filter%5Bkind%5D%5B%5D=expeditor-carrier&filter%5Btype%5D=active&filter%5Bbelong%5D=all&filter%5BisGeneralPartner%5D=true&page=1&perPage=60&with%5B%5D=proxy&with%5B%5D=truck-driver'
+        # base_url = 'https://cargomart.ru/api/v2/order'
+
         all_new_orders = {}  # Словарь для хранения новых заявок
 
         # Начальная пагинация
         page = 1
         while True:
+            # Add a 30-second pause at the beginning of each loop iteration
+            await asyncio.sleep(30)
             # Выполнение GET-запроса с добавлением куки в заголовки
+            print(f"Processing page {page} and order-length {len(all_new_orders)}")
             response = requests.get(base_url, cookies=cookies, params={'page': page})
 
             # Проверка статуса и вывод ответа
@@ -35,15 +40,28 @@ class Cargomart:
                 data = response.json().get('data', {})
                 orders = data.get('order', [])
                 # полностью парсим только новые заявки
-                new_orders = [order for order in orders if order['id'] not in self.orders]
+                new_orders = [order for order in orders if f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order['id']}" not in self.orders]
                 processed_orders = await process_orders(new_orders)  # Используем await для вызова асинхронной функции
 
                 # Для старых просто обновляем цену
                 for order in orders:
-                    order_id = order['id']
+                    order_id = f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order['id']}"
                     if order_id in self.orders:
                         # Update the rate_with_vat in the existing order
-                        self.orders[order_id]['payment']['rate_with_vat'] = order['currentPrice']
+                        current_price = order.get("currentPrice")
+                        if current_price is None:
+                            print(f"Warning: 'currentPrice' not found for order {order['id']}")
+                            continue
+
+                        if isinstance(current_price, str):
+                            try:
+                                current_price = float(current_price.replace(',', '.'))
+                            except ValueError:
+                                print(f"Error: Unable to convert currentPrice '{current_price}' to float for order {order['id']}")
+                                continue
+        
+                        self.orders[order_id]['payment']['rate_with_vat'] =  int(round(current_price * 0.85, -2))
+                        self.orders[order_id]['payment']['rate_without_vat'] =  int(round(current_price * 0.85 / 1.2, -2))
                         processed_orders.append(self.orders[order_id])
 
                 pagination = data.get('pagination', {})
