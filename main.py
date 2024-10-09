@@ -3,15 +3,21 @@ import asyncio
 import os
 import requests
 from dotenv import load_dotenv
-from ati.ati_crud import delete_all_orders, delete_order, create_order, update_order
+from ati.ati_crud import delete_all_orders, delete_order, create_order, update_order, get_api_orders
 import time
 import json
 import os
 
+# contacts = [
+#     12,
+#     36,
+#     38,
+#     39
+# ]
+
 contacts = [
     12,
     36,
-    38,
     39
 ]
 
@@ -37,6 +43,9 @@ while True:
 
     new_orders = asyncio.run(cargomart.get_orders())
 
+    if len(new_orders.items()) == 0:
+        break
+
     print('hHIIII')
     print(len(new_orders.items()))
     for order_id in list(orders.keys()):
@@ -55,7 +64,15 @@ while True:
             result = create_order(new_order)                
             # Add a small delay before creating the order
             time.sleep(0.1)
-            orders[order_id] = result
+            if result.get('status') == 'failed':
+                orders[order_id] = result
+            else:
+                orders[order_id] = {
+                    'cargo_id': result['cargo_id'],
+                    'payment': result['payment'],
+                    'external_id': result['external_id'],
+                    'contacts': result['contacts']
+                }
         elif orders[order_id] is not None and orders[order_id].get('status') != 'failed':
             # Check if rate has changed
             new_rate = int(new_order['payment']['rate_with_vat'])

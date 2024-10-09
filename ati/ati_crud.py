@@ -76,6 +76,8 @@ def delete_all_orders():
     for order_id, order_data in orders.items():
         if 'Id' in order_data:
             delete_order(order_data['Id'])
+        elif 'cargo_id' in order_data:
+            delete_order(order_data['cargo_id'])
 
 def get_api_orders():
     # Get loads from ATI API
@@ -93,7 +95,7 @@ def get_api_orders():
             order_number = order.get('OrderNumber')
             if order_number:
                 filtered_orders[order_number] = {
-                    'Id': order.get('Id'),
+                    'cargo_id': order.get('Id'),
                     'payment': {
                         'rate_with_vat': order.get('Payment', {}).get('SumWithNDS')
                     },

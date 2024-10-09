@@ -30,7 +30,7 @@ class Cargomart:
         page = 1
         while True:
             # Add a 30-second pause at the beginning of each loop iteration
-            await asyncio.sleep(30)
+            await asyncio.sleep(15)
             # Выполнение GET-запроса с добавлением куки в заголовки
             print(f"Processing page {page} and order-length {len(all_new_orders)}")
             response = requests.get(base_url, cookies=cookies, params={'page': page})
