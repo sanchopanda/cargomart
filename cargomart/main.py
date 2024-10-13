@@ -7,6 +7,7 @@ from utils.config import chrome_driver_path, chrome_options
 from cargomart.auth import login
 from cargomart.process_order import process_orders
 from cargomart.cookies_manager import cookies_file
+import datetime
 
 class Cargomart:
     def __init__(self):
@@ -31,6 +32,9 @@ class Cargomart:
         while True:
             # Add a 30-second pause at the beginning of each loop iteration
             await asyncio.sleep(15)
+            now = datetime.datetime.now()
+            print(now.strftime("%H:%M:%S"))
+
             # Выполнение GET-запроса с добавлением куки в заголовки
             print(f"Processing page {page} and order-length {len(all_new_orders)}")
             response = requests.get(base_url, cookies=cookies, params={'page': page})

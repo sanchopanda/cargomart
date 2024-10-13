@@ -7,6 +7,7 @@ from ati.ati_crud import delete_all_orders, delete_order, create_order, update_o
 import time
 import json
 import os
+import datetime
 
 # contacts = [
 #     12,
@@ -48,6 +49,8 @@ while True:
 
     print('hHIIII')
     print(len(new_orders.items()))
+    now = datetime.datetime.now()
+    print(now.strftime("%H:%M:%S"))
     for order_id in list(orders.keys()):
         if order_id not in new_orders and orders[order_id] is not None and orders[order_id].get('status') != 'failed':
             cargo_id = orders[order_id]['cargo_id']

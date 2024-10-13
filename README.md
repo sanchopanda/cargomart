@@ -5,6 +5,12 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
+Если активация виртуального окружения вызывает ошибку, нужно открыть PowerShell от имени администратора и выполнить команду
+
+```bash
+Set-ExecutionPolicy RemoteSigned
+```
+
 ## Установка зависимостей
 
 
@@ -18,16 +24,18 @@ pip install -r requirements.txt
 pip freeze > requirements.txt
 ```
 
-## Установка переменных (дописать)
+## Установка переменных 
 
+выполнить
 
-## Установка credential для гугл таблиц
+```bash
+copy .env.example .env
+```
 
-Необходимо если нужно сохранять данные в гугл таблицу
+или скопировать/создать вручную, прописать в .env свои значения
 
-1. Создать проект в Google Cloud Console
-2. Включить Google Sheets API для вашего проекта.
-3. Создайте учетные данные OAuth 2.0 и получите файл credentials.json
-4. Выдать доступ к таблице боту, почта в файле credentials.json
+## Запуск скрипта 
 
-## Запуск скрипта (дописать)
+```bash
+python main.py
+```

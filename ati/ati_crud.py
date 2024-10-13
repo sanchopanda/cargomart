@@ -17,25 +17,36 @@ headers = {
 def create_order(order):
     # Create order
     response = requests.post('https://api.ati.su/v2/cargos', headers=headers, json={'cargo_application': order})
+    
     if response.status_code == 200:
         print(f"Successfully created order with id: {order['external_id']}")
-        return response.json()['cargo_application']
+        return response.json().get('cargo_application', {})
     else:
         print(f"Failed to create order. Status code: {response.status_code} order_id: {order['external_id']}")
-        error_data = response.json()
+        
+        # Attempt to parse JSON response
+        try:
+            error_data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            print(f"Response content is not valid JSON. {response}")
+            error_data = {
+                'status': 'failed',
+                'code': response.status_code
+            }
+
         if 'reason' in error_data:
             print(f"Reason: {error_data['reason']}")
             if 'error_list' in error_data and error_data['error_list']:
                 print(f"Detailed reason: {error_data['error_list'][0]['reason']}")
-          
 
-        # Ensure the 'failed_create' directory exists
-        os.makedirs('failed_create', exist_ok=True)
+        # # Ensure the 'failed_create' directory exists
+        # os.makedirs('failed_create', exist_ok=True)
 
-        # Create the filename using the order's external_id
-        external_id = order['external_id'].split('3D')[-1] if '3D' in order['external_id'] else order['external_id']
-        filename = f"failed_create/{external_id}.json"
-        # Write the order data to the JSON file
+        # # Create the filename using the order's external_id
+        # external_id = order['external_id'].split('3D')[-1] if '3D' in order['external_id'] else order['external_id']
+        # filename = f"failed_create/{external_id}.json"
+        
+        # # Write the order data to the JSON file
         # with open(filename, 'w') as f:
         #     json.dump(order, f, indent=4)
 
