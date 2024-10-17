@@ -4,23 +4,11 @@ import os
 import requests
 from dotenv import load_dotenv
 from ati.ati_crud import delete_all_orders, delete_order, create_order, update_order, get_api_orders
+from config import contacts
 import time
 import json
 import os
 import datetime
-
-# contacts = [
-#     12,
-#     36,
-#     38,
-#     39
-# ]
-
-contacts = [
-    12,
-    36,
-    39
-]
 
 contact_index = 0
 

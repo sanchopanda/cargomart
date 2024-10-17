@@ -37,7 +37,13 @@ class Cargomart:
 
             # Выполнение GET-запроса с добавлением куки в заголовки
             print(f"Processing page {page} and order-length {len(all_new_orders)}")
-            response = requests.get(base_url, cookies=cookies, params={'page': page})
+            while True:  # Цикл для повторного запроса в случае ошибки
+                try:
+                    response = requests.get(base_url, cookies=cookies, params={'page': page})
+                    break  # Успешный запрос, выходим из цикла
+                except Exception as e:
+                    print(f"Ошибка запроса: {e}. Повторная попытка через 5 секунд.")
+                    await asyncio.sleep(5)  # Ждем перед повтором
 
             # Проверка статуса и вывод ответа
             if response.status_code == 200:
@@ -92,7 +98,6 @@ class Cargomart:
                 cookies = {cookie['name']: cookie['value'] for cookie in cookies_data}
             else:
                 print("Ошибка при выполнении запроса:", response.status_code)
-                break  # Выход из цикла при ошибке
 
         # обновляем значение self.orders
         self.orders = all_new_orders
