@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Логи
+*.log
+
+# Куки
+cookies.json
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Среда разработки
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Конфиденциальные данные
+*.env
+
+#Файл процесса
+bidding_details.json
+processed_bids.json
