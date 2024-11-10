@@ -53,6 +53,7 @@ while True:
     print(len(new_orders.items()))
     now = datetime.datetime.now()
     print(now.strftime("%H:%M:%S"))
+    print(orders)
     for order_id in list(orders.keys()):
         if order_id not in new_orders and orders[order_id] is not None and orders[order_id].get('status') != 'failed':
             cargo_id = orders[order_id]['cargo_id']

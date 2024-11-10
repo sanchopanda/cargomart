@@ -3,11 +3,13 @@ from logistpro.parser.transport_parser import convert_date  # Импортиру
 def build_ati_waypoints(waypoints, parsed_application):
     """Создает список waypoints для ATI API с добавлением информации о грузе."""
     ati_waypoints = []
+    cargo_added = False
+
     for wp in waypoints:
         # Конвертация даты
-        first_date = wp.get("date", "Не указано")
-        if first_date != "Не указано":
-            first_date = convert_date(first_date)
+        # first_date = wp.get("date", "Не указано")
+        # if first_date != "Не указано":
+        #     first_date = convert_date(first_date)
 
         # Создаем базовый словарь way_point без поля 'address'
         way_point = {
@@ -23,7 +25,7 @@ def build_ati_waypoints(waypoints, parsed_application):
                     "start": wp.get("time_start", "Не указано"),
                     #"end": wp.get("time_end") if wp.get("time_end") else None
                 },
-                "first_date": wp.get("date", "Не указано")
+                "first_date": wp.get("date", None)
             }
         }
 # Добавляем 'end', только если оно присутствует и не пустое
@@ -36,7 +38,7 @@ def build_ati_waypoints(waypoints, parsed_application):
             way_point["location"]["address"] = address
 
         # Добавляем информацию о грузе для загрузочных точек
-        if wp.get('type') == 'loading':
+        if wp.get('type') == 'loading' and not cargo_added:
             way_point["cargos"] = [
                 {
                     "id": 1,
@@ -50,6 +52,8 @@ def build_ati_waypoints(waypoints, parsed_application):
                     }
                 }
             ]
+
+            cargo_added = True
 
         ati_waypoints.append(way_point)
 

@@ -33,13 +33,13 @@ def create_request_body(parsed_application):
             "truck": {
                 "trucks_count": 1,
                 "load_type": "ftl",
-                "body_types": parsed_application.get('CargoTypeID', 'Не указано'),
+                "body_types": [parsed_application.get('CargoTypeID')],
                 "body_loading": {
-                    "types": parsed_application.get('LoadingTypeID', 'Не указано'),
+                    "types": [parsed_application.get('LoadingTypeID')],
                     "is_all_required": True
                 },
                 "body_unloading": {
-                    "types": parsed_application.get('LoadingTypeID', 'Не указано'),
+                    "types": [parsed_application.get('LoadingTypeID')],
                     "is_all_required": True
                 },
                 "requirements": {

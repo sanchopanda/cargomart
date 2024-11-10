@@ -31,4 +31,4 @@ def convert_date(date_str):
         except ValueError:
             continue
     logging.warning(f"Некорректный формат даты: {date_str}")
-    return "Не указано"
+    return None

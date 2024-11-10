@@ -43,7 +43,7 @@ def parse_route(route):
                 formatted_date = convert_date(date_str)
                 loading_time = start_time.strip()
             else:
-                formatted_date = "Не указано"
+                formatted_date = None
                 loading_time = time_start.strip()
 
             waypoint_type = 'loading' if 'Погрузка' in type_part else 'unloading' if 'Выгрузка' in type_part else 'unknown'
