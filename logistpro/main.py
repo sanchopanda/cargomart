@@ -25,7 +25,6 @@ class Logistpro:
             data = get_data_with_cookies(COOKIE_FILE)
 
             if data is not None and 'Items' in data:
-                print(len(data['Items']))
                 request_bodies = process_applications(data, AUTHORIZATION_TOKEN)
                 
                 return request_bodies

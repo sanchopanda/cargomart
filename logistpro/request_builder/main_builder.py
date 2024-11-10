@@ -7,7 +7,6 @@ def create_request_body(parsed_application):
     """Создает тело запроса на основе распарсенных данных заявки."""
     try:
         waypoints = parsed_application.get('WayPoints', [])
-        print(waypoints)
         ati_waypoints = build_ati_waypoints(waypoints, parsed_application)
 
         loading_waypoints = [wp for wp in ati_waypoints if wp.get('type') == 'loading']

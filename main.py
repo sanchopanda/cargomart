@@ -44,7 +44,8 @@ while True:
     else:
         orders = {}
 
-    new_orders = asyncio.run(cargomart.get_orders())
+    # new_orders = asyncio.run(cargomart.get_orders())
+    new_orders = asyncio.run(logistpro.get_orders())
 
     if len(new_orders.items()) == 0:
         break
