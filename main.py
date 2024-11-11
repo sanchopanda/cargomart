@@ -1,4 +1,5 @@
 from cargomart.main import Cargomart
+from logistpro.main import Logistpro
 import asyncio
 import os
 import requests
@@ -10,12 +11,28 @@ import json
 import os
 import datetime
 
+<<<<<<< HEAD
+=======
+# contacts = [
+#     12,
+#     36,
+#     38,
+#     39,
+#     37
+# ]
+
+contacts = [
+    37
+]
+
+>>>>>>> dev
 contact_index = 0
 
 ORDERS_FILE = 'ati/existed_orders.json'
 # delete_all_orders()
 
 cargomart = Cargomart()
+logistpro = Logistpro()
 
 orders = get_api_orders()
 
@@ -30,12 +47,12 @@ while True:
     else:
         orders = {}
 
-    new_orders = asyncio.run(cargomart.get_orders())
+    # new_orders = asyncio.run(cargomart.get_orders())
+    new_orders = asyncio.run(logistpro.get_orders())
 
     if len(new_orders.items()) == 0:
         break
 
-    print('hHIIII')
     print(len(new_orders.items()))
     now = datetime.datetime.now()
     print(now.strftime("%H:%M:%S"))
