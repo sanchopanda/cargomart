@@ -27,6 +27,10 @@ def create_request_body(parsed_application):
         if processed_waypoints:
             route["way_points"] = processed_waypoints
 
+        if parsed_application.get('InitCost') is None:
+            print(f"Warning: 'currentPrice' not found for order {parsed_application.get('Id')}")
+            return None
+
         request_body = {
             "external_id": f"https://lk.logistpro.su/Tender/Details/{parsed_application.get('Id')}",
             "route": route,
@@ -41,16 +45,7 @@ def create_request_body(parsed_application):
                 "body_unloading": {
                     "types": [parsed_application.get('LoadingTypeID')],
                     "is_all_required": True
-                },
-                "requirements": {
-                    "logging_truck": False,
-                    "road_train": False,
-                    "air_suspension": True
-                },
-                "adr": 3,
-                "belts_count": 4,
-                "is_tracking": True,
-                "required_capacity": 15
+                }
             },
             "payment": {
                 "type": "without-bargaining",
