@@ -24,7 +24,6 @@ def format_waypoints(waypoints, data):
 
     formatted_waypoints.append({
         "type": "loading",
-        "city_id": first_city_info.get("city_id"),
         "location": first_location,
         "dates": {
             "type": "ready",
@@ -32,7 +31,8 @@ def format_waypoints(waypoints, data):
                 "type": "bounded",
                 "start": first_wp["ArrivalAt"].split("T")[1][:-1]
             },
-            "first_date": first_wp["ArrivalAt"].split("T")[0]
+            "first_date": first_wp["ArrivalAt"].split("T")[0],
+            "last_date": first_wp["ArrivalAt"].split("T")[0]
         },
         "cargos": [
             {
@@ -66,7 +66,8 @@ def format_waypoints(waypoints, data):
                     "type": "bounded",
                     "start": wp["ArrivalAt"].split("T")[1][:-1]
                 },
-                "first_date": wp["ArrivalAt"].split("T")[0]
+                "first_date": wp["ArrivalAt"].split("T")[0],
+                "last_date": wp["ArrivalAt"].split("T")[0],
             }
         }
 

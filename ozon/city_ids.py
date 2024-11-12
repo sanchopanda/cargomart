@@ -2,6 +2,9 @@ import logging
 import requests
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TOKEN_ATI = os.getenv("TOKEN_ATI")
 
@@ -12,6 +15,10 @@ def get_city_ids(addresses):
         "Authorization": f"Bearer {TOKEN_ATI}",
         "Content-Type": "application/json"
     }
+
+    # Логируем токен для отладки
+    logging.info(f"Используемый токен ATI: {TOKEN_ATI}")
+
     # Удаление дубликатов адресов
     unique_addresses = list(set(addresses))
     logging.info(f"Уникальные адреса перед отправкой запроса: {unique_addresses}")
@@ -23,7 +30,7 @@ def get_city_ids(addresses):
     response = requests.post(url, headers=headers, data=payload)
     if response.status_code == 200:
         response_data = response.json()
-        logging.info(f"Успешный ответ: {json.dumps(response_data, ensure_ascii=False, indent=4)}")
+        logging.info(f"Успешный ответ: {json.dumps(response_data, indent=4)}")
         return response_data
     else:
         # Логирование кода ошибки и текста ответа для отладки

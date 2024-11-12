@@ -1,5 +1,11 @@
 import os
 from ozon_parser import format_waypoints
+from type import loadingTypes, truckTypes
+
+from dotenv import load_dotenv
+
+load_dotenv()
+BORD_ID = os.getenv("BORD_ID")
 
 def create_request_body(data):
     if data:
@@ -10,19 +16,22 @@ def create_request_body(data):
             "way_points": formatted_waypoints[1:-1]
         }
 
+# Определяем тип кузова в зависимости от значения Name в Temperature
+        temperature_name = data.get("Temperature", {}).get("Name", "")
+        if temperature_name == "Не требуется":
+            body_type = truckTypes[5]  # Тент
+        else:
+            body_type = truckTypes[4]  # Рефрижератор
+
         request_body = {
             "external_id": data["ID"],
             "route": route,
             "truck": {
                 "trucks_count": 1,
                 "load_type": "ftl",
-                "body_types": "NULL",
+                "body_types": body_type,
                 "body_loading": {
-                    "types": "NULL",
-                    "is_all_required": True
-                },
-                "body_unloading": {
-                    "types": "NULL",
+                    "types": loadingTypes[2],
                     "is_all_required": True
                 },
                 "requirements": {
@@ -38,8 +47,8 @@ def create_request_body(data):
             "payment": {
                 "type": "without-bargaining",
                 "currency_type": 1,
-                "rate_with_vat": int((data["ProcedureInfo"]["StartPrice"]) / 100),
-                "rate_without_vat": data["ProcedureInfo"]["Step"]
+                "rate_with_vat": int(round((data["ProcedureInfo"]["StartPrice"] / 100) * 0.85, -2)),
+                "rate_without_vat": int(round((data["ProcedureInfo"]["StartPrice"] / 100) * 0.85 / 1.2, -2))
             },
             "boards": [
                 {
