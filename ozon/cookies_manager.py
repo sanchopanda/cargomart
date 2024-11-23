@@ -1,6 +1,6 @@
 import os
 import json
-from login import get_cookies_from_selenium
+from ozon.login import get_cookies_from_selenium
 
 # Функция для загрузки куки из файла
 def load_cookies():

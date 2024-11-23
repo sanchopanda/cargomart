@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
+from ozon.config import COOKIE_FILE, CHROME_DRIVER_PATH
 
 
 def get_cookies_from_selenium():
@@ -13,7 +14,7 @@ def get_cookies_from_selenium():
     chrome_options.add_argument("--disable-dev-shm-usage")
 
     # Укажите путь к вашему драйверу
-    service = Service(executable_path='/chromedriver-win64/chromedriver.exe')  # Укажите путь к ChromeDriver
+    service = Service(executable_path=CHROME_DRIVER_PATH)  # Укажите путь к ChromeDriver
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # Открываем страницу авторизации
@@ -31,7 +32,7 @@ def get_cookies_from_selenium():
             cookie_dict[cookie['name']] = cookie['value']
         
         # Сохраняем куки в файл
-        with open("cookies.json", "w", encoding="utf-8") as f:
+        with open(COOKIE_FILE, "w", encoding="utf-8") as f:
             json.dump(cookie_dict, f, ensure_ascii=False, indent=4)
 
     finally:

@@ -1,6 +1,6 @@
 import os
-from ozon_parser import format_waypoints
-from type import loadingTypes, truckTypes
+from ozon.ozon_parser import format_waypoints
+from ozon.type import loadingTypes, truckTypes
 
 from dotenv import load_dotenv
 

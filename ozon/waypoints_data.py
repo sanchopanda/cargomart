@@ -1,4 +1,4 @@
-from city_ids import get_city_ids
+from ozon.city_ids import get_city_ids
 import logging
 
 def format_waypoints(waypoints, data):

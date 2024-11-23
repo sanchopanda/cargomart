@@ -1,8 +1,8 @@
 import os
 import requests
-from cookies_manager import get_headers
-from waypoints_data import format_waypoints
-from request_ati import create_request_body
+from ozon.cookies_manager import get_headers
+from ozon.waypoints_data import format_waypoints
+from ozon.request_ati import create_request_body
 
 
 def get_biddings_list(cookies, processed_bids):
