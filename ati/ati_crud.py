@@ -40,18 +40,18 @@ def create_order(order):
                 print(f"Detailed reason: {error_data['error_list'][0]['reason']}")
 
         # Ensure the 'failed_create' directory exists
-        os.makedirs('failed_create', exist_ok=True)
+        # os.makedirs('failed_create', exist_ok=True)
 
-        # Create the filename using the order's external_id
-        external_id = order['external_id'].split('3D')[-1] if '3D' in order['external_id'] else order['external_id']
-        external_id = order['external_id'].replace("https://lk.logistpro.su/Tender/Details/", "")
-        filename = f"failed_create/{external_id}.json"
+        # # Create the filename using the order's external_id
+        # external_id = order['external_id'].split('3D')[-1] if '3D' in order['external_id'] else order['external_id']
+        # external_id = order['external_id'].replace("https://lk.logistpro.su/Tender/Details/", "")
+        # filename = f"failed_create/{external_id}.json"
         
-        # Write the order data to the JSON file
-        with open(filename, 'w') as f:
-            json.dump(order, f, indent=4)
+        # # Write the order data to the JSON file
+        # with open(filename, 'w') as f:
+        #     json.dump(order, f, indent=4)
 
-        print(f"Failed order data saved to {filename}")
+        # print(f"Failed order data saved to {filename}")
 
         return {
             "status": "failed",

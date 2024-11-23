@@ -37,17 +37,29 @@ def parse_route(route):
                 time_start = time.strip()
                 time_end = None  # Отсутствует время окончания
 
-            # Извлекаем дату и преобразуем формат
+          # Разделяем время на дату и время начала, если они оба присутствуют
             if ' ' in time_start:
                 date_str, start_time = time_start.split(' ', 1)
                 formatted_date = convert_date(date_str)
                 loading_time = start_time.strip()
             else:
-                formatted_date = None
-                loading_time = time_start.strip()
+                # Если есть только дата или только время, обрабатываем соответственно
+                if '.' in time_start:  # Предполагаем, что это дата
+                    formatted_date = convert_date(time_start)
+                    loading_time = None
+                else:  # Иначе предполагаем, что это время
+                    formatted_date = None
+                    loading_time = time_start.strip()
+
+
+
+            
+            
 
             waypoint_type = 'loading' if 'Погрузка' in type_part else 'unloading' if 'Выгрузка' in type_part else 'unknown'
 
+            if(formatted_date == None):
+                print(route)
             # Добавляем в список waypoints
             waypoints.append({
                 'type': waypoint_type,

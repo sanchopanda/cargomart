@@ -32,11 +32,15 @@ def parse_application(application, authorization_token):
     loading_type_mapping = {
         "Задняя": 4,
         "Задня": 4,
-        "задняя": 4
+        "задняя": 4,
+        "Боковая": 2,
+        "боковая": 2,
+        "Бокова": 2
     }
 
     # Получение CargoTypeID и LoadingTypeID
     cargo_type_id = cargo_type_mapping.get(cargo_type, "Не указано")
+    
     loading_type_id = loading_type_mapping.get(loading_type, "Не указано")
 
     # Парсинг маршрута

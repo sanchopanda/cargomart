@@ -18,8 +18,17 @@ cookies = {cookie['name']: cookie['value'] for cookie in cookies_data}
 
 
 async def process_order(order):
-    response = requests.get(api_url + str(order['id']), cookies=cookies)
-    if response.status_code == 200:
+    counter = 0
+    while counter < 3:  # Цикл для повторного запроса в случае ошибки
+        try:
+            response = requests.get(api_url + str(order['id']), cookies=cookies)
+            break  # Успешный запрос, выходим из цикла
+        except Exception as e:
+            print(f"Ошибка запроса: {e}. Повторная попытка через 5 секунд.")
+            await asyncio.sleep(3)  # Ждем перед повтором
+            counter = counter + 1
+    
+    if response and response.status_code == 200:
         data = response.json()['data']  # Поправил на .json(), так как это JSON-ответ
         order_data = data.get('order')
 
@@ -41,43 +50,47 @@ async def process_order(order):
                 print(f"Error: Unable to convert currentPrice '{current_price}' to float for order {order_data.get('id')}")
                 return None
 
-        ati_order = {
-            "external_id": f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data.get('id')}",
-            "route": route,
-            "truck": {
-                "load_type": "dont-care",
-                "body_types": [truckTypes[order_data["truckTypeId"]]],
-                "body_loading": {
-                    "types": [loadingTypes[order["loading"][0]]]
+        try:
+            ati_order = {
+                "external_id": f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data.get('id')}",
+                "route": route,
+                "truck": {
+                    "load_type": "dont-care",
+                    "body_types": [truckTypes[order_data["truckTypeId"]]],
+                    "body_loading": {
+                        "types": [loadingTypes[order["loading"][0]]]
+                    },
+                    "body_unloading": {
+                        "types": [loadingTypes[order["loading"][0]]]
+                    },
+                    "temperature": order_data.get("temperature") if "temperature" in order_data else None,
+                    "documents": {
+                        # ToDo: разобраться
+                        # tir: boolean (nullable),
+                        # cmr: boolean (nullable),
+                        # t1: boolean (nullable),
+                        "medical_card": order_data.get("condition", {}).get("needHygieneCert", False),
+                    }
                 },
-                "body_unloading": {
-                    "types": [loadingTypes[order["loading"][0]]]
+                "payment": {
+                    "type": "without-bargaining",
+                    "currency_type": currencyTypes[order["currencyCode"]],
+                    # ToDo: разобраться тут
+                    # "rate_without_vat": "?",
+                    # "cash": "?"
+                    "rate_with_vat": int(round(current_price * 0.85, -2)),
+                    "rate_without_vat": int(round(current_price * 0.85 / 1.2, -2))
                 },
-                "temperature": order_data.get("temperature") if "temperature" in order_data else None,
-                "documents": {
-                    # ToDo: разобраться
-                    # tir: boolean (nullable),
-                    # cmr: boolean (nullable),
-                    # t1: boolean (nullable),
-                    "medical_card": order_data.get("condition", {}).get("needHygieneCert", False),
-                }
-            },
-            "payment": {
-                "type": "without-bargaining",
-                "currency_type": currencyTypes[order["currencyCode"]],
-                # ToDo: разобраться тут
-                # "rate_without_vat": "?",
-                # "cash": "?"
-                "rate_with_vat": int(round(current_price * 0.85, -2)),
-                "rate_without_vat": int(round(current_price * 0.85 / 1.2, -2))
-            },
-            "boards": [
-                {
-                    "id": os.getenv('BOARD_ID'),
-                    "reservation_enabled": False
-                }
-            ]
-        }
+                "boards": [
+                    {
+                        "id": os.getenv('BOARD_ID'),
+                        "reservation_enabled": False
+                    }
+                ]
+            }
+        except:
+            print(f"Error: Unable to create ati body {order_data.get('id')}")
+            return None
 
         return ati_order
     else:

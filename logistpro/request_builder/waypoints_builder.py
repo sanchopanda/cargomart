@@ -5,7 +5,7 @@ def build_ati_waypoints(waypoints, parsed_application):
     ati_waypoints = []
     cargo_added = False
 
-    for wp in waypoints:
+    for index, wp in enumerate(waypoints):
         # Конвертация даты
         # first_date = wp.get("date", "Не указано")
         # if first_date != "Не указано":
@@ -19,13 +19,14 @@ def build_ati_waypoints(waypoints, parsed_application):
                 "city_id": wp.get('city_id', 'Не указано'),
             },
             "dates": {
-                "type": "ready",
+                "type": "from-date" if index == 0 else None,
                 "time": {
                     "type": "bounded",
                     "start": wp.get("time_start", "Не указано"),
                     #"end": wp.get("time_end") if wp.get("time_end") else None
                 },
-                "first_date": wp.get("date", None)
+                "first_date": wp.get("date", None),
+                "last_date":  wp.get("date", None)
             }
         }
 # Добавляем 'end', только если оно присутствует и не пустое
