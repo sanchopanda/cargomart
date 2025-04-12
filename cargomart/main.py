@@ -52,12 +52,12 @@ class Cargomart:
                 data = response.json().get('data', {})
                 orders = data.get('order', [])
                 # полностью парсим только новые заявки
-                new_orders = [order for order in orders if f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order['id']}" not in self.orders]
+                new_orders = [order for order in orders if f"cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order['id']}" not in self.orders]
                 processed_orders = await process_orders(new_orders)  # Используем await для вызова асинхронной функции
 
                 # Для старых просто обновляем цену
                 for order in orders:
-                    order_id = f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order['id']}"
+                    order_id = f"cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order['id']}"
                     if order_id in self.orders:
                         # Update the rate_with_vat in the existing order
                         current_price = order.get("currentPrice")

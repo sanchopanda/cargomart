@@ -53,7 +53,7 @@ async def process_order(order):
 
         try:
             ati_order = {
-                "external_id": f"https://cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data.get('id')}",
+                "external_id": f"cargomart.ru/orders/active?modal=order-view%3Fhash%3D{order_data.get('id')}",
                 "route": route,
                 "truck": {
                     "load_type": "dont-care",
