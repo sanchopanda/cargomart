@@ -22,6 +22,14 @@ orders = get_api_orders()
 with open(ORDERS_FILE, 'w') as f:
     json.dump(orders, f)
 
+async def fetch_orders():
+    # Fetch orders from both sources in parallel
+    [cargomart_orders] = await asyncio.gather(
+        cargomart.get_orders()
+    )
+    
+    return cargomart_orders
+
 while True:
     # Load existing orders from file
     if os.path.exists(ORDERS_FILE):
@@ -30,12 +38,11 @@ while True:
     else:
         orders = {}
 
-    new_orders = asyncio.run(cargomart.get_orders())
+    new_orders = asyncio.run(fetch_orders())  
 
     if len(new_orders.items()) == 0:
         break
 
-    print('hHIIII')
     print(len(new_orders.items()))
     now = datetime.datetime.now()
     print(now.strftime("%H:%M:%S"))

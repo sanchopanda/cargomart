@@ -15,17 +15,19 @@ class Cargomart:
 
     async def get_orders(self):
         # Загрузка куки из файла
-        with open(cookies_file, 'r', encoding='utf-8') as file:
-            cookies_data = json.load(file)
-
-        # Подготовка куки для запроса
-        cookies = {cookie['name']: cookie['value'] for cookie in cookies_data}
+        try:
+            with open(cookies_file, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                cookie_string = data.get('cookie_string', '')
+        except (FileNotFoundError, json.JSONDecodeError):
+            cookie_string = ''
 
         # URL для GET-запроса
         base_url = 'https://cargomart.ru/api/v2/order?filter%5Bavailable%5D=true&filter%5BorderType%5D%5B%5D=auction&filter%5BorderType%5D%5B%5D=express&filter%5Bkind%5D%5B%5D=project&filter%5Bkind%5D%5B%5D=ftl&filter%5Bkind%5D%5B%5D=offer&filter%5Bkind%5D%5B%5D=expeditor-carrier&filter%5Btype%5D=active&filter%5Bbelong%5D=all&filter%5BisGeneralPartner%5D=true&page=1&perPage=60&with%5B%5D=proxy&with%5B%5D=truck-driver'
         # base_url = 'https://cargomart.ru/api/v2/order'
 
         all_new_orders = {}  # Словарь для хранения новых заявок
+        headers = {'Cookie': cookie_string} if cookie_string else {}
 
         # Начальная пагинация
         page = 1
@@ -39,7 +41,7 @@ class Cargomart:
             print(f"Processing page {page} and order-length {len(all_new_orders)}")
             while True:  # Цикл для повторного запроса в случае ошибки
                 try:
-                    response = requests.get(base_url, cookies=cookies, params={'page': page})
+                    response = requests.get(base_url, headers=headers, params={'page': page})
                     break  # Успешный запрос, выходим из цикла
                 except Exception as e:
                     print(f"Ошибка запроса: {e}. Повторная попытка через 5 секунд.")
@@ -93,9 +95,12 @@ class Cargomart:
                 driver = webdriver.Chrome(service=service, options=chrome_options)
                 login(driver)  # Выполняем авторизацию
                 driver.quit()
+
+                # Получаем обновленные куки
                 with open(cookies_file, 'r', encoding='utf-8') as file:
-                    cookies_data = json.load(file)
-                cookies = {cookie['name']: cookie['value'] for cookie in cookies_data}
+                    data = json.load(file)
+                    cookie_string = data.get('cookie_string', '')
+                    headers = {'Cookie': cookie_string} if cookie_string else {}
             else:
                 print("Ошибка при выполнении запроса:", response.status_code)
 

@@ -11,3 +11,5 @@ REM Установка зависимостей из requirements.txt
 C:\Users\Dir\AppData\Local\Programs\Python\Python313\python.exe -m pip install -r requirements.txt
 
 echo Установка завершена.
+REM Ожидание нажатия клавиши перед закрытием окна
+pause
