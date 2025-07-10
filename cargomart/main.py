@@ -23,7 +23,8 @@ class Cargomart:
             cookie_string = ''
 
         # URL для GET-запроса
-        base_url = 'https://cargomart.ru/api/v2/order?filter%5Bavailable%5D=true&filter%5BorderType%5D%5B%5D=auction&filter%5BorderType%5D%5B%5D=express&filter%5Bkind%5D%5B%5D=project&filter%5Bkind%5D%5B%5D=ftl&filter%5Bkind%5D%5B%5D=offer&filter%5Bkind%5D%5B%5D=expeditor-carrier&filter%5Btype%5D=active&filter%5Bbelong%5D=all&filter%5BisGeneralPartner%5D=true&page=1&perPage=60&with%5B%5D=proxy&with%5B%5D=truck-driver'
+        # base_url = 'https://cargomart.ru/api/v2/order?filter%5Bavailable%5D=true&filter%5BorderType%5D%5B%5D=auction&filter%5BorderType%5D%5B%5D=express&filter%5Bkind%5D%5B%5D=project&filter%5Bkind%5D%5B%5D=ftl&filter%5Bkind%5D%5B%5D=offer&filter%5Bkind%5D%5B%5D=expeditor-carrier&filter%5Btype%5D=active&filter%5Bbelong%5D=all&filter%5BisGeneralPartner%5D=true&page=1&perPage=60&with%5B%5D=proxy&with%5B%5D=truck-driver'
+        base_url = 'https://cargomart.ru/api/v2.1/order?filter%5Bavailable%5D=true&filter%5BorderType%5D%5B%5D=express&filter%5Bkind%5D%5B%5D=project&filter%5Bkind%5D%5B%5D=ftl&filter%5Bkind%5D%5B%5D=offer&filter%5Bkind%5D%5B%5D=expeditor-carrier&filter%5Btype%5D=active&filter%5Bbelong%5D=all&filter%5BisGeneralPartner%5D=true&page=1&perPage=60&with%5B%5D=proxy&with%5B%5D=truck-driver'
         # base_url = 'https://cargomart.ru/api/v2/order'
 
         all_new_orders = {}  # Словарь для хранения новых заявок
